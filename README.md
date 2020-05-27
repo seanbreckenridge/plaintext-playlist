@@ -8,9 +8,8 @@ I wanted a minimal, scriptable-friendly playlist for my local music, without hav
 
 This includes a `fzf` backed interactive interface, which lets you create/edit playlists by fuzzy matching against playlist names/songs. However, you're not required to use it, you can edit the playlist by running commands like:
 
-```
-cd $HOME/Music && find Daft\ Punk/2013\ -\ Random\ Access\ Memories -name "*.mp3" | sort -n >> ~/.config/plaintext_playlist/electronic.txt
-```
+
+`cd $HOME/Music && find Daft\ Punk/2013\ -\ Random\ Access\ Memories -name "*.mp3" | sort -n >> ~/.config/plaintext_playlist/electronic.txt`
 
 ... to append the filenames of all (or some, by `grep`ing against the output/doing whatever you want to edit the playlist.txt file) of the songs in some folder to a playlist without ever running `plainplay`.
 
@@ -18,9 +17,8 @@ If you later want to remove songs, you could either edit the file manually and r
 
 Playlists are played through `mpv`, by using the `--playlist` flag, reading from `STDIN`, which could also be done without `plainplay`:
 
-```
-cd $HOME/Music && mpv --playlist=- < "$HOME/.config/plaintext_playlist/electronic.txt"
-```
+
+`cd $HOME/Music && mpv --playlist=- < "$HOME/.config/plaintext_playlist/electronic.txt"`
 
 `plainplay` gives you an interactive interface to do what the commands above do, and additionally:
 
