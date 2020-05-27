@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+# require that a executable be installed
+require() {
+	if [[ ! $(command -v "$1") ]]; then
+		printf "This application requires %s, but I can't seem to find it on your \$PATH.\n" "$1" 1>&2
+		exit 1
+	fi
+}
+
+# resolve configuration location, setup playlist dir
+application_setup() {
+	# PLAINTEXT_PLAYLIST_CONF can be set by the user to override,
+	# else respect XDG, else put config in ~/.config/plaintext_playlist
+	declare PLAINTEXT_PLAYLIST_CONF="${PLAINTEXT_PLAYLIST_CONF:=${XDG_CONFIG_HOME:-HOME/.config}/plaintext_playlist}"
+	${PLAINTEXT_PLAYLIST_MUSIC_DIR?:"ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your 'main' music folder) isn't set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay."}
+	if [ ! -d "$PLAINTEXT_PLAYLIST_CONF" ]; then
+		printf "Creating configuration directory at '%s'\n" "$PLAINTEXT_PLAYLIST_CONF"
+		mkdir -p "$PLAINTEXT_PLAYLIST_CONF" || exit 1
+	fi
+}
+
+print_help() {
+	cat <<EOF
+Usage: plaintext [-h] [COMMANDS]...
+interactive terminal playlist manager, storing contents in readable text files
+run without any 'COMMANDS' to drop into the interactive interface
+
+add                Adds one or more songs to a playlist
+remove             Removes one of more songs from a playlist
+playlist-create    Creates a new playlist - a playlist file
+playlist-remove    Removes an existing playlist - deletes the playlist file
+playlist-list      List the full paths of each of your playlist files
+configdir          Print the location of the configuration directory
+check              Makes sure that all songs in all your playlists exist
+resolve            Attempts to fix broken paths in playlists
+
+EOF
+}
+
+# prints help and exits if the user asked for help
+check_for_help() {
+	if [ "$1" = "-h" ] || [ "$1" = "-help" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+		print_help
+		exit 0
+	fi
+}
+
+application_setup
+check_for_help "$@"
