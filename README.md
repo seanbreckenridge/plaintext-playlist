@@ -4,9 +4,9 @@
 
 I wanted a minimal, scriptable-friendly playlist for my local music, without having to rely on a third party playlist manager/GUI interface.
 
-*This stores playlists as text files, one per playlist, where each line is the (relative) path to a song in the playlist.*
+_This stores playlists as text files, one per playlist, where each line is the (relative) path to a song in the playlist._
 
-This includes a `fzf` backed interactive interface, which lets you create/edit playlists by fuzzy matching against playlist names/songs. However, you're not required to use it, you can edit the playlist by running commands like:
+This includes a `fzf` backed interactive mode, which lets you create/edit playlists by fuzzy matching against playlist names/songs. However, you're not required to use it, you can edit the playlist by running commands like:
 
 ```
 cd $HOME/Music && find Daft\ Punk/2013\ -\ Random\ Access\ Memories -name "*.mp3" | sort -n >> ~/.config/plaintext_playlist/electronic.txt
@@ -22,10 +22,10 @@ Playlists are played through `mpv`, by using the `--playlist` flag, reading from
 cd $HOME/Music && mpv --playlist=- < "$HOME/.config/plaintext_playlist/electronic.txt"
 ```
 
-`plainplay` gives you an interactive interface to do what the commands above do, and additionally:
+`plainplay` gives you an interactive mode to do what the commands above do, and additionally:
 
-* the `check` command, to make sure none of your playlists are broken; all your filepaths still exist
-* the `resolve` command, which tries to fix the broken paths by using the [distance between](https://github.com/life4/textdistance) the text
+- the `check` command, to make sure none of your playlists are broken; all your filepaths still exist
+- the `resolve` command, which tries to fix the broken paths by using the [distance between](https://github.com/life4/textdistance) the text
 
 ### Configuration/Installation
 
@@ -46,4 +46,3 @@ ArtistName/AlbumName/Disc2/song.flac
 ... which is then combined to `"${HOME}/Music/ArtistName/AlbumName/Disc2/song.flac"`
 
 If you don't specify exactly that format, you can run the `check`/`resolve` commands, which will attempt to remove absolute paths/match the closest path and prompt you to update the playlist file.
-

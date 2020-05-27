@@ -1,4 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# plainplay, an script to maintain plaintext playlists
+# see https://github.com/seanbreckenridge/plaintext-playlist
+#
+# For reference, variable styling is:
+# ENVIRONMENT_VARIABLES
+# GlobalVariables
+# temporaryVariables
+
+# Global Variables
+ConfDir=
+MusicDir=
+# defaults to fzf interactive if not set
+ReadInputType=FROMSTDIN
+Action=
+ActivePlaylist=
 
 # require that a executable be installed
 require() {
@@ -7,35 +22,44 @@ require() {
 		exit 1
 	fi
 }
+require realpath
+require printf
 
-# resolve configuration location, setup playlist dir
-application_setup() {
-	# PLAINTEXT_PLAYLIST_CONF can be set by the user to override,
-	# else respect XDG, else put config in ~/.config/plaintext_playlist
-	declare PLAINTEXT_PLAYLIST_CONF="${PLAINTEXT_PLAYLIST_CONF:=${XDG_CONFIG_HOME:-HOME/.config}/plaintext_playlist}"
-	${PLAINTEXT_PLAYLIST_MUSIC_DIR?:"ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your 'main' music folder) isn't set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay."}
-	if [ ! -d "$PLAINTEXT_PLAYLIST_CONF" ]; then
-		printf "Creating configuration directory at '%s'\n" "$PLAINTEXT_PLAYLIST_CONF"
-		mkdir -p "$PLAINTEXT_PLAYLIST_CONF" || exit 1
-	fi
+# HELP RELATED
+
+# A list of commands
+commands_list() {
+	cat <<EOF
+add <playlist>                | Adds one or more songs to a playlist
+remove <playlist>             | Removes one of more songs from a playlist
+playlist-create <playlist>    | Creates a new playlist - a playlist file
+playlist-remove <playlist>    | Removes an existing playlist - deletes the playlist file
+playlist-list                 | List the full paths of each of your playlist files
+configdir                     | Print the location of the configuration directory
+check                         | Makes sure that all songs in all your playlists exist
+resolve                       | Attempts to fix broken paths in playlists
+EOF
 }
 
+# print help for user
 print_help() {
 	cat <<EOF
-Usage: plaintext [-h] [COMMANDS]...
+Usage: plaintext [-h] [COMMAND [ARGS]]
 interactive terminal playlist manager, storing contents in readable text files
-run without any 'COMMANDS' to drop into the interactive interface
+run without a COMMAND to drop into interactive mode
 
-add                Adds one or more songs to a playlist
-remove             Removes one of more songs from a playlist
-playlist-create    Creates a new playlist - a playlist file
-playlist-remove    Removes an existing playlist - deletes the playlist file
-playlist-list      List the full paths of each of your playlist files
-configdir          Print the location of the configuration directory
-check              Makes sure that all songs in all your playlists exist
-resolve            Attempts to fix broken paths in playlists
+add|remove recieve filenames from STDIN
+--fzf can be passed with add/remove to use fzf
+to multi select files to add/remove
+instead of recieving from STDIN
+
+<playlist> specifies either the
+name (without the location/.txt extension)
+or the location of one of the playlists
 
 EOF
+	commands_list
+	exit 0
 }
 
 # prints help and exits if the user asked for help
@@ -46,5 +70,210 @@ check_for_help() {
 	fi
 }
 
-application_setup
+# APPLICATION SETUP
+
+# resolve configuration location, setup playlist dir
+application_setup() {
+	# PLAINTEXT_PLAYLIST_CONF can be set by the user to override,
+	# else respect XDG, else put config in ~/.config/plaintext_playlist
+	ConfDir="${PLAINTEXT_PLAYLIST_CONF:=${XDG_CONFIG_HOME:-HOME/.config}/plaintext_playlist}"
+	# error if user hasn't set music dir
+	MusicDir="${PLAINTEXT_PLAYLIST_MUSIC_DIR?:'ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your root music folder) is not set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay.'}"
+	if [ ! -d "$MusicDir" ]; then
+		printf "'%s' doesn't exist.\nThat should be the main, top-level folder where you keep your music locally.\n" "$PLAINTEXT_PLAYLIST_MUSIC_DIR" 1>&2
+		exit 1
+	fi
+	# create configuration dir if it doesnt exist.
+	if [ ! -d "$ConfDir" ]; then
+		printf "Creating configuration directory at '%s'\n" "$ConfDir"
+		mkdir -p "$ConfDir" || exit 1
+	fi
+}
+
+# ARGUMENT PARSING/PROMPTING
+
+# parse arguments from command line.
+parse_args() {
+	while [[ -n "$1" ]]; do
+		case "$1" in
+		add)
+			Action=ADD
+			ActivePlaylist="$2"
+			shift
+			;;
+		remove)
+			Action=REMOVE
+			ActivePlaylist="$2"
+			shift
+			;;
+
+		playlist-create)
+			Action=PLAYLIST_CREATE
+			ActivePlaylist="$2"
+			shift
+			break
+			;;
+
+		playlist-remove)
+			Action=PLAYLIST_REMOVE
+			ActivePlaylist="$2"
+			shift
+			break
+			;;
+
+		playlist-list)
+			Action=PLAYLIST_LIST
+			break
+			;;
+
+		configdir)
+			Action=PLAYLIST_CONFIGDIR
+			break
+			;;
+
+		check)
+			Action=PLAYLIST_CHECK
+			break
+			;;
+		resolve)
+			Action=PLAYLIST_RESOLVE
+			break
+			;;
+		--fzf)
+			ReadInputType=MULTI_SELECT_FZF
+			;;
+		*)
+			printf "Error: Unexpected argument: %s\n\n" "$1" 1>&2
+			print_help
+			exit 1
+			;;
+		esac
+		shift # remove keyword
+	done
+	# if nothing was passed by the user
+	if [ -z "$Action" ]; then
+		pick_command_interactive
+	fi
+}
+
+# prompts the user with the list of commands, and lets them select one of them
+pick_command_interactive() {
+	require fzf
+	if ! rawFzfChoice=$(commands_list | fzf -i --prompt='Run > '); then
+		printf "Error: You didn't provide valid input to fzf.\n" 1>&2
+		exit 1
+	fi
+	# get the first argument (e.g. add|remove|playlist-list)
+	firstArg=("${rawFzfChoice%% *| *}")
+	parse_args "${firstArg[@]}"
+}
+
+# returns the playlist path for a path/name if it exists.
+# If -x is provided as the second argument, exits if playlist path doesn't exist
+get_playlist_path() {
+	fullPath=$(realpath "$1")
+	# if the full path exists
+	if [ -e "$fullPath" ]; then
+		echo -e "$fullPath"
+	# else if the file is just a name (e.g. rock{,.txt} for $ConfDir/rock.txt)
+	else
+		fullPath="${ConfDir}/${1%.txt}.txt"
+		if [ -f "$fullPath" ]; then
+			echo -e "$fullPath"
+		else
+			# if not told to exit, prints the path, even though the path may not exist
+			if [ "$2" = "-x" ]; then
+				printf "Could not find a matching playlist for: '%s'" "$1" 1>&2
+				exit 1
+			else
+				echo -e "$fullPath"
+			fi
+		fi
+	fi
+}
+
+# presents the user with a prompt of playlists to choose from
+pick_existing_playlist() {
+	if [ "$(playlist_count)" = "0" ]; then
+		printf "Error: No playlists exist. Create one before trying to select one\n" 1>&2
+		exit 1
+	fi
+	if ! playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ')"; then
+		printf "Error: You didn't select a valid playlist.\n" 1>&2
+		exit 1
+	fi
+	echo -e "$playlistName"
+}
+
+# lists the names of the playlists (without .txt)
+list_playlists() {
+	command ls -1 "$ConfDir" | grep -i ".txt$" | sed -e "s/\.txt//g"
+}
+
+# returns the number of playlists
+playlist_count() {
+	command ls -1 "$ConfDir" | wc -l
+}
+
+# ask the user for some input, hit enter to continue. "$1" is the prompt string
+generic_input() {
+	read -e -p "$1" -r "reply"
+	echo -e "$reply"
+}
+
+# "main"
+run_plaintext_playlist() {
+	# Validate Playlist based on given arguments
+	# Prompt user if necessary
+	case "$Action" in
+	ADD | REMOVE | PLAYLIST_REMOVE)
+		if [ -z "$ActivePlaylist" ]; then
+			ActivePlaylist="$(pick_existing_playlist)" || exit 1
+		fi
+		ActivePlaylist=$(get_playlist_path "$ActivePlaylist" -x) || exit 1
+		;;
+	PLAYLIST_CREATE)
+		if [ -z "$ActivePlaylist" ]; then
+			ActivePlaylist="$(get_playlist_path "$(generic_input 'Name of new playlist: ')")" || exit 1
+		fi
+		;;
+	esac
+
+	# printf "%s\n" "$Action"
+	# printf "%s\n" "$ActivePlaylist"
+	printf "%s\n" "$ReadInputType"
+	# Run, based on Action
+	case "$Action" in
+	PLAYLIST_CREATE)
+		if [ -f "$ActivePlaylist" ]; then
+			printf "Warning: Playlist '%s' already exists.\n" "$ActivePlaylist" 1>&2
+		else
+			touch "$ActivePlaylist"
+			printf "Created Playlist: '%s'\n" "$ActivePlaylist"
+		fi
+		;;
+	PLAYLIST_LIST)
+		find "$ConfDir" -type f
+		;;
+
+	PLAYLIST_REMOVE)
+		printf "Are you sure you want to delete '%s'?\n [y/N]" "$ActivePlaylist"
+		read -r "response"
+		if [[ $response =~ ^[Yy] ]]; then
+			rm "$ActivePlaylist"
+			printf "Deleted Playlist: '%s'\n" "$ActivePlaylist"
+		fi
+		;;
+	esac
+}
+
+# select result in Yes No Cancel
+# do
+#     echo $result
+# done
+
 check_for_help "$@"
+application_setup
+parse_args "$@"
+run_plaintext_playlist "$Action" "$ActivePlaylist" || exit 1
+# After this point, ActivePlaylist is an absolute path
