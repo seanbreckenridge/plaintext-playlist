@@ -18,7 +18,7 @@ ActivePlaylist=
 # require that a executable be installed
 require() {
 	if [[ ! $(command -v "$1") ]]; then
-		printf "This application requires %s, but I can't seem to find it on your \$PATH.\n" "$1" 1>&2
+		printf "This part of the application requires %s, but I can't seem to find it on your \$PATH.\n" "$1" 1>&2
 		exit 1
 	fi
 }
@@ -32,8 +32,11 @@ commands_list() {
 	cat <<EOF
 add <playlist>                | Adds one or more songs to a playlist
 remove <playlist>             | Removes one of more songs from a playlist
+list <playlist>               | List songs in a playlist
+play <playlist>               | Play songs from a playlist
+shuffle <playlist>            | Shuffle songs from a playlist
 playlist-create <playlist>    | Creates a new playlist - a playlist file
-playlist-remove <playlist>    | Removes an existing playlist - deletes the playlist file
+playlist-remove <playlist>    | Removes an existing playlist - deletes a playlist file
 playlist-list                 | List the full paths of each of your playlist files
 configdir                     | Print the location of the configuration directory
 check                         | Makes sure that all songs in all your playlists exist
@@ -106,7 +109,24 @@ parse_args() {
 			ActivePlaylist="$2"
 			shift
 			;;
-
+		list)
+			Action=LIST
+			ActivePlaylist="$2"
+			shift
+			break
+			;;
+		play)
+			Action=PLAY
+			ActivePlaylist="$2"
+			shift
+			break
+			;;
+		shuffle)
+			Action=SHUFFLE
+			ActivePlaylist="$2"
+			shift
+			break
+			;;
 		playlist-create)
 			Action=PLAYLIST_CREATE
 			ActivePlaylist="$2"
@@ -127,16 +147,16 @@ parse_args() {
 			;;
 
 		configdir)
-			Action=PLAYLIST_CONFIGDIR
+			Action=CONFIGDIR
 			break
 			;;
 
 		check)
-			Action=PLAYLIST_CHECK
+			Action=CHECK
 			break
 			;;
 		resolve)
-			Action=PLAYLIST_RESOLVE
+			Action=RESOLVE
 			break
 			;;
 		--fzf)
@@ -199,7 +219,7 @@ pick_existing_playlist() {
 		exit 1
 	fi
 	if ! playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ')"; then
-		printf "Error: You didn't select a valid playlist.\n" 1>&2
+		echo "Error: You didn't select a valid playlist." 1>&2
 		exit 1
 	fi
 	echo -e "$playlistName"
@@ -207,6 +227,7 @@ pick_existing_playlist() {
 
 # lists the names of the playlists (without .txt)
 list_playlists() {
+	require sed
 	command ls -1 "$ConfDir" | grep -i ".txt$" | sed -e "s/\.txt//g"
 }
 
@@ -221,12 +242,24 @@ generic_input() {
 	echo -e "$reply"
 }
 
+# checks a playlist file for broken paths
+check_playlist() {
+	playlistToCheck="$1"
+	printf "Checking '%s'...\n" "$playlistToCheck"
+	while read -r song; do
+		songFullPath="${MusicDir}/${song}"
+		if [ ! -e "$songFullPath" ]; then
+			printf "Error: '%s' doesn't exist\n" "$songFullPath" 1>&2
+		fi
+	done <"$playlistToCheck"
+}
+
 # "main"
 run_plaintext_playlist() {
 	# Validate Playlist based on given arguments
 	# Prompt user if necessary
 	case "$Action" in
-	ADD | REMOVE | PLAYLIST_REMOVE)
+	ADD | REMOVE | LIST | PLAY | SHUFFLE | PLAYLIST_REMOVE)
 		if [ -z "$ActivePlaylist" ]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
@@ -241,7 +274,7 @@ run_plaintext_playlist() {
 
 	# printf "%s\n" "$Action"
 	# printf "%s\n" "$ActivePlaylist"
-	printf "%s\n" "$ReadInputType"
+	# printf "%s\n" "$ReadInputType"
 	# Run, based on Action
 	case "$Action" in
 	PLAYLIST_CREATE)
@@ -253,7 +286,7 @@ run_plaintext_playlist() {
 		fi
 		;;
 	PLAYLIST_LIST)
-		find "$ConfDir" -type f
+		find "$ConfDir" -type f -iname "*.txt"
 		;;
 
 	PLAYLIST_REMOVE)
@@ -264,13 +297,44 @@ run_plaintext_playlist() {
 			printf "Deleted Playlist: '%s'\n" "$ActivePlaylist"
 		fi
 		;;
+	CONFIGDIR)
+		printf "%s\n" "$ConfDir"
+		;;
+	CHECK)
+		find "$ConfDir" -type f -iname "*.txt" -print0 |
+			while IFS= read -r -d '' playlistToCheck; do
+				check_playlist "$playlistToCheck"
+			done
+		;;
+	RESOLVE)
+		printf "Resolve has not been implemented yet\n" 1>&2
+		exit 1
+		;;
+	ADD)
+		echo "Running add..."
+		;;
+	REMOVE)
+		echo "Running remove..."
+		;;
+	LIST)
+		cat "$ActivePlaylist"
+		;;
+	PLAY)
+		playCommand="cd \"${MusicDir}\" && mpv --playlist=- --no-audio-display <\"${ActivePlaylist}\""
+		printf "Running command:\n%s\n" "$playCommand"
+		eval $playCommand
+		;;
+	SHUFFLE)
+		shuffleCommand="cd \"${MusicDir}\" && mpv --shuffle --playlist=- --no-audio-display <\"${ActivePlaylist}\""
+		printf "Running command:\n%s\n" "$shuffleCommand"
+		eval $shuffleCommand
+		;;
+	*)
+		printf "Unexpected Error. Could not find action '%s'\n" "$Action" 1>&2
+		;;
+
 	esac
 }
-
-# select result in Yes No Cancel
-# do
-#     echo $result
-# done
 
 check_for_help "$@"
 application_setup
