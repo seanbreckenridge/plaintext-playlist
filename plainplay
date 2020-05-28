@@ -18,6 +18,9 @@ ActivePlaylist=
 
 PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-$HOME/.cache}}/plaintext_playlist_history.txt"
 
+# set default fzf command
+export FZF_DEFAULT_COMMAND="find -type f | sort"
+
 # error helper
 abort() {
 	echo "$1" 1>&2
@@ -45,6 +48,7 @@ play <playlist>               | Play songs from a playlist
 shuffle <playlist>            | Shuffle songs from a playlist
 list <playlist>               | List songs in a playlist
 unique <playlist>             | Removes duplicates from a playlist
+exif <playlist>               | Displays exif data for items in a playlist
 playlist-create <playlist>    | Creates a new playlist - a playlist file
 playlist-remove <playlist>    | Removes an existing playlist - deletes a playlist file
 playlist-list                 | List the full paths of each of your playlist files
@@ -152,6 +156,14 @@ parse_args() {
 			shift
 			break
 			;;
+
+		exif)
+			Action=EXIF
+			ActivePlaylist="$2"
+			shift
+			break
+			;;
+
 		playlist-create)
 			Action=PLAYLIST_CREATE
 			ActivePlaylist="$2"
@@ -298,7 +310,7 @@ run_plaintext_playlist() {
 	# Validate Playlist based on given arguments
 	# Prompt user if necessary
 	case "$Action" in
-	ADD | REMOVE | LIST | UNIQUE | PLAY | SHUFFLE | PLAYLIST_REMOVE)
+	ADD | REMOVE | LIST | UNIQUE | EXIF | PLAY | SHUFFLE | PLAYLIST_REMOVE)
 		if [ -z "$ActivePlaylist" ]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
@@ -359,7 +371,7 @@ run_plaintext_playlist() {
 
 		MULTI_SELECT_FZF)
 			require fzf
-			if ! songsToAdd=$(FZF_DEFAULT_COMMAND="find -type f" fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > "); then
+			if ! songsToAdd=$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > "); then
 				abort "Error: You didn't provide any songs to add..."
 			fi
 			fixedFilenames=$(convert_to_playlist_filenames <<<"$songsToAdd")
@@ -375,7 +387,7 @@ run_plaintext_playlist() {
 		;;
 	REMOVE)
 		require fzf
-		if ! linesToRemove=$(FZF_DEFAULT_COMMAND="find -type f" fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > " <"$ActivePlaylist"); then
+		if ! linesToRemove=$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > " <"$ActivePlaylist"); then
 			abort "Error: you didn't provide any songs to remove..."
 		fi
 		filteredSongs="$(grep -Fxv "$linesToRemove" <"$ActivePlaylist")"
@@ -390,6 +402,13 @@ run_plaintext_playlist() {
 		uniq "$ActivePlaylist" >"$filteredPlaylistFile"
 		mv "$filteredPlaylistFile" "$ActivePlaylist"
 		printf "Ran 'uniq' on %s\n" "$ActivePlaylist"
+		;;
+	EXIF)
+		require exiftool
+		if ! filepath="$(cd "$MusicDir" && fzf +m -i --prompt="Print exiftool for > " --preview="cd \"$MusicDir\" && exiftool {}" <"$ActivePlaylist")"; then
+			abort "No filepath selected to print exif data for."
+		fi
+		cd "$MusicDir" && exiftool "$filepath"
 		;;
 	PLAY)
 		require mpv
