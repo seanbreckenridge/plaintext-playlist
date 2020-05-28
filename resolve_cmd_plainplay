@@ -91,8 +91,9 @@ def replace_fixed_filepaths_and_write(replacements: Dict[int, str],
     if len(replacements.keys()):
         playlist_lines = read_playlist_file(filename)
         for lineno, replace_with in replacements.items():
-            relative_filepath = replace_with.lstrip(music_dir).lstrip("/")
-            print(playlist_lines[lineno], "->", relative_filepath)
+            _, _, relative_filepath = replace_with.partition(music_dir)
+            relative_filepath = relative_filepath.lstrip("/")
+            print("{} -> {}".format(playlist_lines[lineno],  relative_filepath))
             playlist_lines[lineno] = relative_filepath
         with open(filename, 'w') as playlist_f:
             playlist_f.write("\n".join(playlist_lines))
