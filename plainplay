@@ -225,6 +225,7 @@ get_playlist_path() {
 
 # presents the user with a prompt of playlists to choose from
 pick_existing_playlist() {
+	require fzf
 	if [ "$(playlist_count)" = "0" ]; then
 		abort "Error: No playlists exist. Create one before trying to select one"
 	fi
@@ -338,6 +339,7 @@ run_plaintext_playlist() {
 			;;
 
 		MULTI_SELECT_FZF)
+			require fzf
 			if ! songsToAdd=$(FZF_DEFAULT_COMMAND="find -type f" fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > "); then
 				abort "Error: You didn't provide any songs to add..."
 			fi
@@ -353,6 +355,7 @@ run_plaintext_playlist() {
 		esac
 		;;
 	REMOVE)
+		require fzf
 		if ! linesToRemove=$(FZF_DEFAULT_COMMAND="find -type f" fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > " <"$ActivePlaylist"); then
 			abort "Error: you didn't provide any songs to remove..."
 		fi
