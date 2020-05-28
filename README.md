@@ -2,6 +2,39 @@
 
 Status: The `resolve` command is not done yet, everything else is functional.
 
+```
+Usage: plaintext [-h] [-] [COMMAND [ARGS]]
+
+  Interactive terminal playlist manager, storing contents in readable text files
+  run without a COMMAND to drop into interactive mode
+
+  add and remove defaults to presenting you an
+  fzf interface to add/remove items.
+
+  A hyphen (-) can be passed with add
+  to instead recieve filenames from stdin
+  expects filenames to be in the correct format
+  (cd to your Music dir and use find for good results)
+
+  e.g.: find somedirectory -name "*.flac" | plainplay - add rock
+
+  <playlist> specifies either the
+  name (without the location/.txt extension)
+  or the location of one of the playlists
+
+add <playlist>                | Adds one or more songs to a playlist
+remove <playlist>             | Removes one of more songs from a playlist
+play <playlist>               | Play songs from a playlist
+shuffle <playlist>            | Shuffle songs from a playlist
+list <playlist>               | List songs in a playlist
+playlist-create <playlist>    | Creates a new playlist - a playlist file
+playlist-remove <playlist>    | Removes an existing playlist - deletes a playlist file
+playlist-list                 | List the full paths of each of your playlist files
+playlistdir                   | Print the location of the playlist directory
+check                         | Makes sure that all songs in all your playlists exist
+resolve                       | Attempts to fix broken paths in playlists
+```
+
 ## Rationale
 
 I wanted a minimal, scriptable-friendly playlist for my local music, without having to rely on a third party playlist manager/GUI interface.
@@ -35,9 +68,7 @@ Must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which define
 
 To install, download `plainplay` and put it on your `$PATH` somewhere, e.g.:
 
-```
-curl -s https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/plainplay > ~/.local/bin/plainplay
-```
+`curl -s https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/plainplay > ~/.local/bin/plainplay`
 
 ### Specification
 

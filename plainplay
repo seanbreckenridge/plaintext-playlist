@@ -55,23 +55,24 @@ EOF
 # print help for user
 print_help() {
 	cat <<EOF
-Usage: plaintext [-h] [COMMAND [ARGS]]
-interactive terminal playlist manager, storing contents in readable text files
-run without a COMMAND to drop into interactive mode
+Usage: plaintext [-h] [-] [COMMAND [ARGS]]
 
-add|remove default to presenting you an
-fzf interface to add/remove items.
+  Interactive terminal playlist manager, storing contents in readable text files
+  run without a COMMAND to drop into interactive mode
 
-A hyphen (-) can be passed with add
-to instead recieve filenames from stdin
-expects filenames to be in the correct format
-(cd to your Music dir and use find for good results)
+  add and remove defaults to presenting you an
+  fzf interface to add/remove items.
 
-e.g.: find somedirectory -name "*.flac" | plainplay - add rock
+  A hyphen (-) can be passed with add
+  to instead recieve filenames from stdin
+  expects filenames to be in the correct format
+  (cd to your Music dir and use find for good results)
 
-<playlist> specifies either the
-name (without the location/.txt extension)
-or the location of one of the playlists
+  e.g.: find somedirectory -name "*.flac" | plainplay - add rock
+
+  <playlist> specifies either the
+  name (without the location/.txt extension)
+  or the location of one of the playlists
 
 EOF
 	commands_list
