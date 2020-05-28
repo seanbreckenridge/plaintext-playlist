@@ -57,10 +57,12 @@ Playlists are played through `mpv`, by using the `--playlist` flag, reading from
 
 `cd $HOME/Music && mpv --playlist=- < "$HOME/.local/share/plaintext_playlist/electronic.txt"`
 
-`plainplay` gives you an interactive mode to do what the commands above do, and additionally:
+This only stores the relative filepath to your base music directory in each file, so you could move your music directory somewhere else and update the environment variable, and everything works, even across computers. However, filenames tend to change, and sometimes you might change the name of an artists' folder, or the name of an album to include metadata. So, `plainplay` has commands to help fix that:
 
 - the `check` command, to make sure none of your playlists are broken; all your filepaths still exist
 - the `resolve` command, which tries to fix the broken paths by using the [distance between](https://github.com/life4/textdistance) the text
+
+`resolve` will use the dice coefficient to try and resolve the broken filepath to an existing filepath in your music directory.
 
 ### Configuration/Installation
 
