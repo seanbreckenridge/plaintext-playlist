@@ -267,8 +267,11 @@ convert_to_playlist_filenames() {
 	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"$relativeFilenames")"
 	# make sure user gave data
 	[ -z "$absoluteFilenames" ] && abort "Did not recieve any filenames to add"
+	# if the $MusicDir is a link, (e.g. linked to some other drive)
+	# also replace that path
+	absoluteNoLinkFilename="$(realpath "$MusicDir")"
 	# convert to relative filenames:
-	echo -e "$absoluteFilenames" | sed -e "s|^${MusicDir%/}/||"
+	echo -e "$absoluteFilenames" | sed -e "s|^${MusicDir%/}/||" -e "s|^${absoluteNoLinkFilename%/}/||"
 }
 
 # checks a playlist file for broken paths
