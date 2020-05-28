@@ -1,6 +1,6 @@
 # plaintext-playlist
 
-#### Rationale
+## Rationale
 
 I wanted a minimal, scriptable-friendly playlist for my local music, without having to rely on a third party playlist manager/GUI interface.
 
