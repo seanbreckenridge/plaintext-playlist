@@ -11,19 +11,27 @@
 ConfDir=
 MusicDir=
 # defaults to fzf interactive if not set
-ReadInputType=FROMSTDIN
+ReadInputType=MULTI_SELECT_FZF
 Action=
 ActivePlaylist=
+
+PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-$HOME/.cache}}/plaintext_playlist_history.txt"
+
+# error helper
+abort() {
+	echo "$1" 1>&2
+	exit 1
+}
 
 # require that a executable be installed
 require() {
 	if [[ ! $(command -v "$1") ]]; then
-		printf "This part of the application requires %s, but I can't seem to find it on your \$PATH.\n" "$1" 1>&2
-		exit 1
+		abort "This part of the application requires ${1}, but I can't seem to find it on your \$PATH"
 	fi
 }
 require realpath
 require printf
+require sed
 
 # HELP RELATED
 
@@ -32,13 +40,13 @@ commands_list() {
 	cat <<EOF
 add <playlist>                | Adds one or more songs to a playlist
 remove <playlist>             | Removes one of more songs from a playlist
-list <playlist>               | List songs in a playlist
 play <playlist>               | Play songs from a playlist
 shuffle <playlist>            | Shuffle songs from a playlist
+list <playlist>               | List songs in a playlist
 playlist-create <playlist>    | Creates a new playlist - a playlist file
 playlist-remove <playlist>    | Removes an existing playlist - deletes a playlist file
 playlist-list                 | List the full paths of each of your playlist files
-configdir                     | Print the location of the configuration directory
+playlistdir                   | Print the location of the playlist directory
 check                         | Makes sure that all songs in all your playlists exist
 resolve                       | Attempts to fix broken paths in playlists
 EOF
@@ -51,10 +59,15 @@ Usage: plaintext [-h] [COMMAND [ARGS]]
 interactive terminal playlist manager, storing contents in readable text files
 run without a COMMAND to drop into interactive mode
 
-add|remove recieve filenames from STDIN
---fzf can be passed with add/remove to use fzf
-to multi select files to add/remove
-instead of recieving from STDIN
+add|remove default to presenting you an
+fzf interface to add/remove items.
+
+A hyphen (-) can be passed with add
+to instead recieve filenames from stdin
+expects filenames to be in the correct format
+(cd to your Music dir and use find for good results)
+
+e.g.: find somedirectory -name "*.flac" | plainplay - add rock
 
 <playlist> specifies either the
 name (without the location/.txt extension)
@@ -77,18 +90,17 @@ check_for_help() {
 
 # resolve configuration location, setup playlist dir
 application_setup() {
-	# PLAINTEXT_PLAYLIST_CONF can be set by the user to override,
-	# else respect XDG, else put config in ~/.config/plaintext_playlist
-	ConfDir="${PLAINTEXT_PLAYLIST_CONF:=${XDG_CONFIG_HOME:-HOME/.config}/plaintext_playlist}"
+	# PLAINTEXT_PLAYLIST_PLAYLISTS can be set by the user to override,
+	# else respect XDG, else put config in ~/.local/share/plaintext_playlist
+	ConfDir="${PLAINTEXT_PLAYLIST_PLAYLISTS:=${XDG_DATA_HOME:-$HOME/.local/share}/plaintext_playlist}"
 	# error if user hasn't set music dir
 	MusicDir="${PLAINTEXT_PLAYLIST_MUSIC_DIR?:'ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your root music folder) is not set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay.'}"
 	if [ ! -d "$MusicDir" ]; then
-		printf "'%s' doesn't exist.\nThat should be the main, top-level folder where you keep your music locally.\n" "$PLAINTEXT_PLAYLIST_MUSIC_DIR" 1>&2
-		exit 1
+		abort "Error: ${PLAINTEXT_PLAYLIST_MUSIC_DIR} doesn't exist.\nThat should be the main, top-level folder where you keep your music locally."
 	fi
-	# create configuration dir if it doesnt exist.
+	# create playlist dir if it doesnt exist.
 	if [ ! -d "$ConfDir" ]; then
-		printf "Creating configuration directory at '%s'\n" "$ConfDir"
+		printf "Creating playlist directory at '%s'\n" "$ConfDir"
 		mkdir -p "$ConfDir" || exit 1
 	fi
 }
@@ -146,8 +158,8 @@ parse_args() {
 			break
 			;;
 
-		configdir)
-			Action=CONFIGDIR
+		playlistdir)
+			Action=PLAYLISTDIR
 			break
 			;;
 
@@ -159,8 +171,8 @@ parse_args() {
 			Action=RESOLVE
 			break
 			;;
-		--fzf)
-			ReadInputType=MULTI_SELECT_FZF
+		-)
+			ReadInputType=FROM_STDIN
 			;;
 		*)
 			printf "Error: Unexpected argument: %s\n\n" "$1" 1>&2
@@ -179,9 +191,8 @@ parse_args() {
 # prompts the user with the list of commands, and lets them select one of them
 pick_command_interactive() {
 	require fzf
-	if ! rawFzfChoice=$(commands_list | fzf -i --prompt='Run > '); then
-		printf "Error: You didn't provide valid input to fzf.\n" 1>&2
-		exit 1
+	if ! rawFzfChoice=$(commands_list | fzf -i --prompt='Run > ' --history="$PromptHistoryFile"); then
+		abort "Error: You didn't provide a valid command."
 	fi
 	# get the first argument (e.g. add|remove|playlist-list)
 	firstArg=("${rawFzfChoice%% *| *}")
@@ -203,8 +214,7 @@ get_playlist_path() {
 		else
 			# if not told to exit, prints the path, even though the path may not exist
 			if [ "$2" = "-x" ]; then
-				printf "Could not find a matching playlist for: '%s'" "$1" 1>&2
-				exit 1
+				abort "Error: Could not find a matching playlist for: ${1}."
 			else
 				echo -e "$fullPath"
 			fi
@@ -215,19 +225,16 @@ get_playlist_path() {
 # presents the user with a prompt of playlists to choose from
 pick_existing_playlist() {
 	if [ "$(playlist_count)" = "0" ]; then
-		printf "Error: No playlists exist. Create one before trying to select one\n" 1>&2
-		exit 1
+		abort "Error: No playlists exist. Create one before trying to select one"
 	fi
-	if ! playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ')"; then
-		echo "Error: You didn't select a valid playlist." 1>&2
-		exit 1
+	if ! playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ' --preview="cat \"${ConfDir}/\"{}.txt")"; then
+		abort "Error: You didn't select a valid playlist."
 	fi
 	echo -e "$playlistName"
 }
 
 # lists the names of the playlists (without .txt)
 list_playlists() {
-	require sed
 	command ls -1 "$ConfDir" | grep -i ".txt$" | sed -e "s/\.txt//g"
 }
 
@@ -242,12 +249,25 @@ generic_input() {
 	echo -e "$reply"
 }
 
+# uses the current directory plus passed filenames to resolve relative paths
+# into the correct format for a playlist file. accepts relative filenames from stdin
+convert_to_playlist_filenames() {
+	require sed
+	relativeFilenames="$(cat)"
+	# get absolute path of all of the music to be added
+	absoluteFilenames="$(sed -e "s#^.##" <<<"$relativeFilenames" | xargs -I {} echo "${PWD}{}")"
+	# make sure user gave data
+	[ -z "$absoluteFilenames" ] && abort "Did not recieve any filenames to add"
+	# convert to relative filenames:
+	echo -e "$absoluteFilenames" | sed -e "s|^${MusicDir%/}/||"
+}
+
 # checks a playlist file for broken paths
 check_playlist() {
 	playlistToCheck="$1"
 	printf "Checking '%s'...\n" "$playlistToCheck"
 	while read -r song; do
-		songFullPath="${MusicDir}/${song}"
+		songFullPath="${MusicDir%/}/${song}"
 		if [ ! -e "$songFullPath" ]; then
 			printf "Error: '%s' doesn't exist\n" "$songFullPath" 1>&2
 		fi
@@ -290,14 +310,14 @@ run_plaintext_playlist() {
 		;;
 
 	PLAYLIST_REMOVE)
-		printf "Are you sure you want to delete '%s'?\n [y/N]" "$ActivePlaylist"
+		printf "Are you sure you want to delete '%s'? [y/N] " "$ActivePlaylist"
 		read -r "response"
 		if [[ $response =~ ^[Yy] ]]; then
 			rm "$ActivePlaylist"
 			printf "Deleted Playlist: '%s'\n" "$ActivePlaylist"
 		fi
 		;;
-	CONFIGDIR)
+	PLAYLISTDIR)
 		printf "%s\n" "$ConfDir"
 		;;
 	CHECK)
@@ -307,30 +327,54 @@ run_plaintext_playlist() {
 			done
 		;;
 	RESOLVE)
-		printf "Resolve has not been implemented yet\n" 1>&2
-		exit 1
+		abort "Resolve has not been implemented yet"
 		;;
 	ADD)
-		echo "Running add..."
+		case "$ReadInputType" in
+		FROM_STDIN)
+			filenamesToAdd=$(cat)
+			echo -e "$filenamesToAdd" >>"$ActivePlaylist"
+			;;
+
+		MULTI_SELECT_FZF)
+			if ! songsToAdd=$(FZF_DEFAULT_COMMAND="find -type f" fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > "); then
+				abort "Error: You didn't provide any songs to add..."
+			fi
+			fixedFilenames=$(convert_to_playlist_filenames <<<"$songsToAdd")
+			echo -e "Adding the following to ${ActivePlaylist}:"
+			echo -e "$fixedFilenames"
+			echo -e "$fixedFilenames" >>"$ActivePlaylist"
+			;;
+		*)
+			abort "Unrecognized selection type. Expected FROM_STDIN or MULTI_SELECT_FZF"
+			;;
+
+		esac
 		;;
 	REMOVE)
-		echo "Running remove..."
+		if ! linesToRemove=$(FZF_DEFAULT_COMMAND="find -type f" fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > " <"$ActivePlaylist"); then
+			abort "Error: you didn't provide any songs to remove..."
+		fi
+		filteredSongs="$(grep -Fxv "$linesToRemove" <"$ActivePlaylist")"
+		echo -e "$filteredSongs" >"$ActivePlaylist"
 		;;
 	LIST)
 		cat "$ActivePlaylist"
 		;;
 	PLAY)
+		require mpv
 		playCommand="cd \"${MusicDir}\" && mpv --playlist=- --no-audio-display <\"${ActivePlaylist}\""
 		printf "Running command:\n%s\n" "$playCommand"
-		eval $playCommand
+		eval "$playCommand"
 		;;
 	SHUFFLE)
+		require mpv
 		shuffleCommand="cd \"${MusicDir}\" && mpv --shuffle --playlist=- --no-audio-display <\"${ActivePlaylist}\""
 		printf "Running command:\n%s\n" "$shuffleCommand"
-		eval $shuffleCommand
+		eval "$shuffleCommand"
 		;;
 	*)
-		printf "Unexpected Error. Could not find action '%s'\n" "$Action" 1>&2
+		abort "Unexpected Error. Could not find action ${Action}"
 		;;
 
 	esac

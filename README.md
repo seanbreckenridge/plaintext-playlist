@@ -1,5 +1,7 @@
 # plaintext-playlist
 
+Status: The `resolve` command is not done yet, everything else is functional.
+
 ## Rationale
 
 I wanted a minimal, scriptable-friendly playlist for my local music, without having to rely on a third party playlist manager/GUI interface.
@@ -8,8 +10,7 @@ _This stores playlists as text files, one per playlist, where each line is the (
 
 This includes a `fzf` backed interactive mode, which lets you create/edit playlists by fuzzy matching against playlist names/songs. However, you're not required to use it, you can edit the playlist by running commands like:
 
-
-`cd $HOME/Music && find Daft\ Punk/2013\ -\ Random\ Access\ Memories -name "*.mp3" | sort -n >> ~/.config/plaintext_playlist/electronic.txt`
+`cd $HOME/Music && find Daft\ Punk/2013\ -\ Random\ Access\ Memories -name "*.mp3" | sort -n >> ~/.local/share/plaintext_playlist/electronic.txt`
 
 ... to append the filenames of all (or some, by `grep`ing against the output/doing whatever you want to edit the playlist.txt file) of the songs in some folder to a playlist without ever running `plainplay`.
 
@@ -17,8 +18,7 @@ If you later want to remove songs, you could either edit the file manually and r
 
 Playlists are played through `mpv`, by using the `--playlist` flag, reading from `STDIN`, which could also be done without `plainplay`:
 
-
-`cd $HOME/Music && mpv --playlist=- < "$HOME/.config/plaintext_playlist/electronic.txt"`
+`cd $HOME/Music && mpv --playlist=- < "$HOME/.local/share/plaintext_playlist/electronic.txt"`
 
 `plainplay` gives you an interactive mode to do what the commands above do, and additionally:
 
@@ -29,9 +29,15 @@ Playlists are played through `mpv`, by using the `--playlist` flag, reading from
 
 External dependencies: `mpv`, `fzf`, `python3`, (`pip3 install --user -U textdistance`). If you don't use commands that require some dependency (e.g. you never call `resolve`), the corresponding dependency isn't required. Dependencies are checked at runtime (in `bash`).
 
-Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_CONF` (defaults to `~/.config/plaintext_playlist`). If the environment variable is set, overrides the location.
+Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_PLAYLISTS` (defaults to `~/.local/share/plaintext_playlist`). If the environment variable is set, overrides the location.
 
-Must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory.
+Must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory. If you don't have one place you keep all your music, you can set your `$HOME` directory, or `/`, which would cause the playlist files to use absolute paths instead.
+
+To install, download `plainplay` and put it on your `$PATH` somewhere, e.g.:
+
+```
+curl -s https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/plainplay > ~/.local/bin/plainplay
+```
 
 ### Specification
 
