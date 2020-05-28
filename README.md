@@ -13,7 +13,7 @@ Usage: plaintext [-h] [-] [COMMAND [ARGS]]
   to instead recieve filenames from stdin
   expects filenames to be in the correct format
   (cd to your Music dir and use find for good results)
-
+  
   --auto-confirm can be passed with 'resolve' to automatically
   use the closest match instead of prompting you to choose
   one of the closest matching files to fix broken filepaths
@@ -29,6 +29,7 @@ remove <playlist>             | Removes one of more songs from a playlist
 play <playlist>               | Play songs from a playlist
 shuffle <playlist>            | Shuffle songs from a playlist
 list <playlist>               | List songs in a playlist
+unique <playlist>             | Removes duplicates from a playlist
 playlist-create <playlist>    | Creates a new playlist - a playlist file
 playlist-remove <playlist>    | Removes an existing playlist - deletes a playlist file
 playlist-list                 | List the full paths of each of your playlist files

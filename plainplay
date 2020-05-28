@@ -44,6 +44,7 @@ remove <playlist>             | Removes one of more songs from a playlist
 play <playlist>               | Play songs from a playlist
 shuffle <playlist>            | Shuffle songs from a playlist
 list <playlist>               | List songs in a playlist
+unique <playlist>             | Removes duplicates from a playlist
 playlist-create <playlist>    | Creates a new playlist - a playlist file
 playlist-remove <playlist>    | Removes an existing playlist - deletes a playlist file
 playlist-list                 | List the full paths of each of your playlist files
@@ -141,6 +142,12 @@ parse_args() {
 			;;
 		shuffle)
 			Action=SHUFFLE
+			ActivePlaylist="$2"
+			shift
+			break
+			;;
+		unique)
+			Action=UNIQUE
 			ActivePlaylist="$2"
 			shift
 			break
@@ -291,7 +298,7 @@ run_plaintext_playlist() {
 	# Validate Playlist based on given arguments
 	# Prompt user if necessary
 	case "$Action" in
-	ADD | REMOVE | LIST | PLAY | SHUFFLE | PLAYLIST_REMOVE)
+	ADD | REMOVE | LIST | UNIQUE | PLAY | SHUFFLE | PLAYLIST_REMOVE)
 		if [ -z "$ActivePlaylist" ]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
@@ -376,6 +383,13 @@ run_plaintext_playlist() {
 		;;
 	LIST)
 		cat "$ActivePlaylist"
+		;;
+	UNIQUE)
+		require uniq
+		filteredPlaylistFile=/tmp/filtered_playlist
+		uniq "$ActivePlaylist" >"$filteredPlaylistFile"
+		mv "$filteredPlaylistFile" "$ActivePlaylist"
+		printf "Ran 'uniq' on %s\n" "$ActivePlaylist"
 		;;
 	PLAY)
 		require mpv
