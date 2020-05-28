@@ -70,8 +70,6 @@ cd plaintext-playlist
 cp plainplay resolve_cmd_plainplay ~/.local/bin
 ```
 
-`
-
 External dependencies: `mpv`, `fzf`, `python3`, (`pip3 install --user -U textdistance pick`). If you don't use commands that require some dependency (e.g. you never call `resolve`), the corresponding dependency isn't required.
 
 Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_PLAYLISTS` (defaults to `~/.local/share/plaintext_playlist`). If the environment variable is set, overrides the location.
