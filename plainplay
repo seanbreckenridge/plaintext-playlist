@@ -388,4 +388,3 @@ check_for_help "$@"
 application_setup
 parse_args "$@"
 run_plaintext_playlist "$Action" "$ActivePlaylist" || exit 1
-# After this point, ActivePlaylist is an absolute path
