@@ -12,6 +12,7 @@ ConfDir=
 MusicDir=
 # defaults to fzf interactive if not set
 ReadInputType=MULTI_SELECT_FZF
+ResolveAutoConfirm=
 Action=
 ActivePlaylist=
 
@@ -67,6 +68,10 @@ Usage: plaintext [-h] [-] [COMMAND [ARGS]]
   to instead recieve filenames from stdin
   expects filenames to be in the correct format
   (cd to your Music dir and use find for good results)
+  
+  --auto-confirm can be passed with 'resolve' to automatically
+  use the closest match instead of prompting you to choose
+  one of the closest matching files to fix broken filepaths
 
   e.g.: find somedirectory -name "*.flac" | plainplay - add rock
 
@@ -170,10 +175,12 @@ parse_args() {
 			;;
 		resolve)
 			Action=RESOLVE
-			break
 			;;
 		-)
 			ReadInputType=FROM_STDIN
+			;;
+		--auto-confirm)
+			ResolveAutoConfirm="--auto-confirm"
 			;;
 		*)
 			printf "Error: Unexpected argument: %s\n\n" "$1" 1>&2
@@ -257,7 +264,7 @@ convert_to_playlist_filenames() {
 	require sed
 	relativeFilenames="$(cat)"
 	# get absolute path of all of the music to be added
-	absoluteFilenames="$(sed -e "s#^.##" <<<"$relativeFilenames" | xargs -I {} echo "${PWD}{}")"
+	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"$relativeFilenames")"
 	# make sure user gave data
 	[ -z "$absoluteFilenames" ] && abort "Did not recieve any filenames to add"
 	# convert to relative filenames:
@@ -329,7 +336,9 @@ run_plaintext_playlist() {
 			done
 		;;
 	RESOLVE)
-		abort "Resolve has not been implemented yet"
+		[ ! $(command -v resolve_cmd_plainplay) ] && abort "Error: Couldnt find the resolve_cmd_plainplay command on your \$PATH"
+		require python3
+		resolve_cmd_plainplay "$ConfDir" "$MusicDir" "$ResolveAutoConfirm"
 		;;
 	ADD)
 		case "$ReadInputType" in

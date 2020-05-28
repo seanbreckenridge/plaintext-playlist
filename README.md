@@ -1,7 +1,5 @@
 # plaintext-playlist
 
-Status: The `resolve` command is not done yet, everything else is functional.
-
 ```
 Usage: plaintext [-h] [-] [COMMAND [ARGS]]
 
@@ -15,6 +13,10 @@ Usage: plaintext [-h] [-] [COMMAND [ARGS]]
   to instead recieve filenames from stdin
   expects filenames to be in the correct format
   (cd to your Music dir and use find for good results)
+
+  --auto-confirm can be passed with 'resolve' to automatically
+  use the closest match instead of prompting you to choose
+  one of the closest matching files to fix broken filepaths
 
   e.g.: find somedirectory -name "*.flac" | plainplay - add rock
 
@@ -60,15 +62,21 @@ Playlists are played through `mpv`, by using the `--playlist` flag, reading from
 
 ### Configuration/Installation
 
-External dependencies: `mpv`, `fzf`, `python3`, (`pip3 install --user -U textdistance`). If you don't use commands that require some dependency (e.g. you never call `resolve`), the corresponding dependency isn't required. Dependencies are checked at runtime (in `bash`).
+To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
+
+```sh
+git clone https://github.com/seanbreckenridge/plaintext-playlist
+cd plaintext-playlist
+cp plainplay resolve_cmd_plainplay ~/.local/bin
+```
+
+`
+
+External dependencies: `mpv`, `fzf`, `python3`, (`pip3 install --user -U textdistance pick`). If you don't use commands that require some dependency (e.g. you never call `resolve`), the corresponding dependency isn't required.
 
 Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_PLAYLISTS` (defaults to `~/.local/share/plaintext_playlist`). If the environment variable is set, overrides the location.
 
-Must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory. If you don't have one place you keep all your music, you can set your `$HOME` directory, or `/`, which would cause the playlist files to use absolute paths instead.
-
-To install, download `plainplay` and put it on your `$PATH` somewhere, e.g.:
-
-`curl -s https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/plainplay > ~/.local/bin/plainplay`
+Must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory. If you don't have one place you keep all your music, you can set your `$HOME` directory, or `/`, which would cause the playlist files to use absolute paths instead. However, that would make the `resolve` function work very slowly, since it would have to search your entire system to find paths to match broken paths against.
 
 ### Specification
 

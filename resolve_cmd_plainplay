@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+
+from glob import glob
+from typing import List, Tuple, Dict
+
+try:
+    import textdistance
+    from pick import pick
+except ImportError:
+    print(
+        "Could not find the 'textdistance' or 'pick' package. Run 'pip3 install --user -U textdistance pick' to install it.",
+        file=sys.stderr)
+    sys.exit(1)
+
+playlist_dir = None
+music_dir = None
+all_filepaths = None
+auto_confirm = False
+
+
+def read_playlist_file(playlist_file: str) -> List[str]:
+    """
+    Reads a playlist file into a list of filepaths
+    """
+    with open(playlist_file, 'r') as playlist_f:
+        return [
+            line for line in playlist_f.read().splitlines() if line.strip()
+        ]
+
+
+def get_music_dir_files():
+    """
+    If it hasnt already been indexed, get absolute paths
+    for each item in 'music_directory'
+    """
+    global all_filepaths
+    if all_filepaths is None:
+        print("Scanning '{}' for filepaths to compare files against".format(
+            music_dir))
+        all_filepaths = []
+        for dirpath, _, filenames in os.walk(music_dir, followlinks=True):
+            for f in filenames:
+                all_filepaths.append(os.path.abspath(os.path.join(dirpath, f)))
+    return all_filepaths
+
+
+def check_playlist(playlist_file: str) -> List[Tuple[int, str]]:
+    """
+    Checks a playlist file for broken files, returns a list
+    of them if any exist.
+    """
+    print("Checking '{}'...".format(playlist_file))
+    broken_songpaths: List[Tuple[int, str]] = []
+    songs = read_playlist_file(playlist_file)
+    for i, song in enumerate(songs):
+        song_filepath = os.path.join(music_dir, song)
+        if not os.path.exists(song_filepath):
+            broken_songpaths.append((i, song_filepath))
+    return broken_songpaths
+
+
+def fix_filepath(broken_songpath: str):
+    """
+    Uses the text distance to try and fix a broken songpath,
+    prompts the user if --auto-confirm wasn't passed
+    Returns the new filepath.
+    """
+    all_filepaths = get_music_dir_files()
+    similarity_scores: List[Tuple[str, int]] = [
+        (filepath, textdistance.sorensen_dice(broken_songpath, filepath))
+        for filepath in all_filepaths
+    ]
+    similarity_scores.sort(key=lambda item: item[1], reverse=True)
+    if auto_confirm:
+        replace_with_filepath = similarity_scores[0][0]
+    else:
+        replace_with_filepath, _ = pick(
+            [sc[0] for sc in similarity_scores],
+            'Replace {} with'.format(broken_songpath))
+    return replace_with_filepath
+
+
+def replace_fixed_filepaths_and_write(replacements: Dict[int, str],
+                                      filename: str):
+    """
+    Replaces items that have been resolved, writes top the playlist file
+    """
+    if len(replacements.keys()):
+        playlist_lines = read_playlist_file(filename)
+        for lineno, replace_with in replacements.items():
+            relative_filepath = replace_with.lstrip(music_dir).lstrip("/")
+            print(playlist_lines[lineno], "->", relative_filepath)
+            playlist_lines[lineno] = relative_filepath
+        with open(filename, 'w') as playlist_f:
+            playlist_f.write("\n".join(playlist_lines))
+        print("Wrote replacements to", filename)
+
+
+def enumerate_playlists(playlist_dir) -> List[str]:
+    """
+    Returns a list of the playlist .txt files
+    """
+    return glob("{}/*.txt".format(playlist_dir.rstrip("/")))
+
+
+def main(cmd_args: List[str]) -> int:
+    global playlist_dir, music_dir, auto_confirm
+    if len(cmd_args) < 2:
+        print(
+            "Must pass the location of the playlist directory and the music directory as the first two arguments",
+            file=sys.stderr)
+        return 1
+    playlist_dir, music_dir, *rest = cmd_args
+    auto_confirm = "--auto-confirm" in rest
+    for playlist in enumerate_playlists(playlist_dir):
+        playlist_replacements: Dict[int, str] = {}
+        for i, broken_songpath in check_playlist(playlist):
+            playlist_replacements[i] = fix_filepath(broken_songpath)
+        replace_fixed_filepaths_and_write(playlist_replacements, playlist)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
