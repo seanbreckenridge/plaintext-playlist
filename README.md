@@ -69,7 +69,7 @@ This only stores the relative filepath to your base music directory in each file
 To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
 
 ```sh
-git clone https://github.com/seanbreckenridge/plaintext-playlist
+git clone https://gitlab.com/seanbreckenridge/plaintext-playlist
 cd plaintext-playlist
 cp plainplay resolve_cmd_plainplay ~/.local/bin
 ```
