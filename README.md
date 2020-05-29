@@ -51,7 +51,7 @@ This includes a `fzf` backed interactive mode, which lets you create/edit playli
 
 ... to append the filenames of all (or some, by `grep`ing against the output/doing whatever you want to edit the playlist.txt file) of the songs in some folder to a playlist without ever running `plainplay`.
 
-If you later want to remove songs, you could either edit the file manually and remove the corresponding lines, or use `sed` to match against the Artist/Album name to delete those lines.
+If you later want to remove songs, you could either edit the file manually and remove the corresponding lines, or use something like `sed` to match against the Artist/Album name to delete those lines.
 
 Playlists are played through `mpv`, by using the `--playlist` flag, reading from `STDIN`, which could also be done without `plainplay`:
 
