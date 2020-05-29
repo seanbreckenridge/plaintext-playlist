@@ -393,6 +393,8 @@ run_plaintext_playlist() {
 		fi
 		filteredSongs="$(grep -Fxv "$linesToRemove" <"$ActivePlaylist")"
 		echo -e "$filteredSongs" >"$ActivePlaylist"
+		echo -e "Removed the following from ${ActivePlaylist}:"
+		echo -e "$linesToRemove"
 		;;
 	LIST)
 		cat "$ActivePlaylist"
