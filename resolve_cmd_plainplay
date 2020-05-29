@@ -93,7 +93,7 @@ def replace_fixed_filepaths_and_write(replacements: Dict[int, str],
         for lineno, replace_with in replacements.items():
             _, _, relative_filepath = replace_with.partition(music_dir)
             relative_filepath = relative_filepath.lstrip("/")
-            print("{} -> {}".format(playlist_lines[lineno],  relative_filepath))
+            print("{} -> {}".format(playlist_lines[lineno],  relative_filepath), file=sys.stderr)
             playlist_lines[lineno] = relative_filepath
         with open(filename, 'w') as playlist_f:
             playlist_f.write("\n".join(playlist_lines))
