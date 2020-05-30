@@ -27,7 +27,9 @@ Usage: plaintext [-h] [-] [COMMAND [ARGS]]
 add <playlist>                | Adds one or more songs to a playlist
 remove <playlist>             | Removes one of more songs from a playlist
 play <playlist>               | Play songs from a playlist
+playall <playlist>...         | Play songs from multiple playlists
 shuffle <playlist>            | Shuffle songs from a playlist
+shuffleall <playlist>...      | Shuffle songs from multiple playlists
 list <playlist>               | List songs in a playlist
 unique <playlist>             | Removes duplicates from a playlist
 exif <playlist>               | Displays exif data for items in a playlist

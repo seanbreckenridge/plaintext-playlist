@@ -16,6 +16,8 @@ ReadInputType=MULTI_SELECT_FZF
 ResolveAutoConfirm=
 Action=
 ActivePlaylist=
+# used for shuffleall/playall
+AllActivePlaylists=()
 
 PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-$HOME/.cache}}/plaintext_playlist_history.txt"
 
@@ -46,7 +48,9 @@ commands_list() {
 add <playlist>                | Adds one or more songs to a playlist
 remove <playlist>             | Removes one of more songs from a playlist
 play <playlist>               | Play songs from a playlist
+playall <playlist>...         | Play songs from multiple playlists
 shuffle <playlist>            | Shuffle songs from a playlist
+shuffleall <playlist>...      | Shuffle songs from multiple playlists
 list <playlist>               | List songs in a playlist
 unique <playlist>             | Removes duplicates from a playlist
 exif <playlist>               | Displays exif data for items in a playlist
@@ -145,12 +149,28 @@ parse_args() {
 			shift
 			break
 			;;
+
+		playall)
+			Action=PLAYALL
+			ActivePlaylist="$2"
+			AllActivePlaylists+=("$2")
+			shift
+			;;
+
 		shuffle)
 			Action=SHUFFLE
 			ActivePlaylist="$2"
 			shift
 			break
 			;;
+
+		shuffleall)
+			Action=SHUFFLEALL
+			ActivePlaylist="$2"
+			AllActivePlaylists+=("$2")
+			shift
+			;;
+
 		unique)
 			Action=UNIQUE
 			ActivePlaylist="$2"
@@ -202,13 +222,22 @@ parse_args() {
 		--auto-confirm)
 			ResolveAutoConfirm="--auto-confirm"
 			;;
+
 		*)
-			printf "Error: Unexpected argument: %s\n\n" "$1" 1>&2
-			print_help
-			exit 1
+			case "$Action" in
+			# if this is SHUFFLEALL or PLAYALL, save extra arguments
+			*ALL)
+				AllActivePlaylists+=("$1")
+				;;
+			*)
+				printf "Error: Unexpected argument: %s\n\n" "$1" 1>&2
+				print_help
+				exit 1
+				;;
+			esac
 			;;
 		esac
-		shift # remove keyword
+		shift # remove current item from args
 	done
 	# if nothing was passed by the user
 	if [ -z "$Action" ]; then
@@ -242,7 +271,7 @@ get_playlist_path() {
 		else
 			# if not told to exit, prints the path, even though the path may not exist
 			if [ "$2" = "-x" ]; then
-				abort "Error: Could not find a matching playlist for: ${1}."
+				abort "Error: Could not find a matching playlist for: ${1}"
 			else
 				echo -e "$fullPath"
 			fi
@@ -250,16 +279,31 @@ get_playlist_path() {
 	fi
 }
 
-# presents the user with a prompt of playlists to choose from
-pick_existing_playlist() {
-	require fzf
+make_sure_playlists_exist() {
 	if [ "$(playlist_count)" = "0" ]; then
 		abort "Error: No playlists exist. Create one before trying to select one"
 	fi
+}
+
+# presents the user with a prompt of playlists to choose from
+pick_existing_playlist() {
+	require fzf
+	make_sure_playlists_exist
 	if ! playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ' --preview="cat \"${ConfDir}/\"{}.txt")"; then
 		abort "Error: You didn't select a valid playlist."
 	fi
 	echo -e "$playlistName"
+}
+
+# sets AllActivePlaylists to whatever the user selects
+pick_mutliple_existing_playlists() {
+	require fzf
+	make_sure_playlists_exist
+	if ! playlistNames="$(list_playlists | fzf -m -i --prompt="Select multiple playlists by using 'Tab' > " --preview="cat \"${ConfDir}/\"{}.txt")"; then
+		abort "Error: You didn't select a valid playlist."
+	fi
+	readarray -t <<<"$playlistNames"
+	AllActivePlaylists=("${MAPFILE[@]}")
 }
 
 # lists the names of the playlists (without .txt)
@@ -306,6 +350,18 @@ check_playlist() {
 	done <"$playlistToCheck"
 }
 
+# safely concatenates the files in AllActivePlaylists, prints the result to STDOUT
+# incase files dont end properly with a newline, this adds an extra line
+# to the end, and then removes it if it was empty
+safe_concat() {
+	{
+		for pfile in "${AllActivePlaylists[@]}"; do
+			cat "$pfile"
+			echo
+		done
+	} | sed -e "/^\s*$/d"
+}
+
 # "main"
 run_plaintext_playlist() {
 	# Validate Playlist based on given arguments
@@ -315,8 +371,21 @@ run_plaintext_playlist() {
 		if [ -z "$ActivePlaylist" ]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
-		ActivePlaylist=$(get_playlist_path "$ActivePlaylist" -x) || exit 1
+		ActivePlaylist="$(get_playlist_path "$ActivePlaylist" -x)" || exit 1
 		;;
+	PLAYALL | SHUFFLEALL)
+		# if no playlist at all was selected
+		if [ -z "$ActivePlaylist" ]; then
+			pick_mutliple_existing_playlists || exit 1
+		fi
+		# convert each item in the array to a path
+		tempResult=()
+		for plist in "${AllActivePlaylists[@]}"; do
+			tempResult+=("$(get_playlist_path "$plist" -x)") || exit 1
+		done
+		AllActivePlaylists=("${tempResult[@]}")
+		;;
+
 	PLAYLIST_CREATE)
 		if [ -z "$ActivePlaylist" ]; then
 			ActivePlaylist="$(get_playlist_path "$(generic_input 'Name of new playlist: ')")" || exit 1
@@ -359,7 +428,7 @@ run_plaintext_playlist() {
 			done
 		;;
 	RESOLVE)
-		[ ! $(command -v resolve_cmd_plainplay) ] && abort "Error: Couldnt find the resolve_cmd_plainplay command on your \$PATH"
+		[ ! "$(command -v resolve_cmd_plainplay)" ] && abort "Error: Couldnt find the resolve_cmd_plainplay command on your \$PATH"
 		require python3
 		resolve_cmd_plainplay "$ConfDir" "$MusicDir" "$ResolveAutoConfirm"
 		;;
@@ -415,16 +484,24 @@ run_plaintext_playlist() {
 		;;
 	PLAY)
 		require mpv
-		playCommand="cd \"${MusicDir}\" && mpv --playlist=- --no-audio-display <\"${ActivePlaylist}\""
-		printf "Running command:\n%s\n" "$playCommand"
-		eval "$playCommand"
+		cd "$MusicDir" && mpv --playlist=- --no-audio-display <"$ActivePlaylist"
 		;;
+
+	PLAYALL)
+		require mpv
+		cd "$MusicDir" && safe_concat | mpv --playlist=- --no-audio-display
+		;;
+
 	SHUFFLE)
 		require mpv
-		shuffleCommand="cd \"${MusicDir}\" && mpv --shuffle --playlist=- --no-audio-display <\"${ActivePlaylist}\""
-		printf "Running command:\n%s\n" "$shuffleCommand"
-		eval "$shuffleCommand"
+		cd "$MusicDir" && mpv --shuffle --playlist=- --no-audio-display <"$ActivePlaylist"
 		;;
+
+	SHUFFLEALL)
+		require mpv
+		cd "$MusicDir" && safe_concat | mpv --playlist=- --shuffle --no-audio-display
+		;;
+
 	*)
 		abort "Unexpected Error. Could not find action ${Action}"
 		;;
