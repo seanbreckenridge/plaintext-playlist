@@ -86,7 +86,8 @@ def fix_filepath(broken_songpath: str):
 def replace_fixed_filepaths_and_write(replacements: Dict[int, str],
                                       filename: str):
     """
-    Replaces items that have been resolved, writes top the playlist file
+    Replaces items that have been resolved, writes back to the playlist file
+    if there are changes
     """
     if len(replacements.keys()):
         playlist_lines = read_playlist_file(filename)
