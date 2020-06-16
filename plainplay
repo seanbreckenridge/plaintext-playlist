@@ -19,7 +19,7 @@ ActivePlaylist=
 # used for shuffleall/playall
 AllActivePlaylists=()
 
-PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-$HOME/.cache}}/plaintext_playlist_history.txt"
+readonly PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-$HOME/.cache}}/plaintext_playlist_history.txt"
 
 # set default fzf command
 export FZF_DEFAULT_COMMAND="find -type f | sort"
@@ -32,9 +32,7 @@ abort() {
 
 # require that a executable be installed
 require() {
-	if [[ ! $(command -v "$1") ]]; then
-		abort "This part of the application requires ${1}, but I can't seem to find it on your \$PATH"
-	fi
+	[[ $(command -v "$1") ]] || abort "This part of the application requires ${1}, but I can't seem to find it on your \$PATH"
 }
 require realpath
 require printf
@@ -96,7 +94,7 @@ EOF
 
 # prints help and exits if the user asked for help
 check_for_help() {
-	if [ "$1" = "-h" ] || [ "$1" = "-help" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+	if [[ $1 =~ "help" || $1 == "-h" ]]; then
 		print_help
 		exit 0
 	fi
@@ -111,11 +109,9 @@ application_setup() {
 	ConfDir="${PLAINTEXT_PLAYLIST_PLAYLISTS:=${XDG_DATA_HOME:-$HOME/.local/share}/plaintext_playlist}"
 	# error if user hasn't set music dir
 	MusicDir="${PLAINTEXT_PLAYLIST_MUSIC_DIR?:'ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your root music folder) is not set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay.'}"
-	if [ ! -d "$MusicDir" ]; then
-		abort "Error: ${PLAINTEXT_PLAYLIST_MUSIC_DIR} doesn't exist.\nThat should be the main, top-level folder where you keep your music locally."
-	fi
+	[[ -d "$MusicDir" ]] || abort "Error: ${PLAINTEXT_PLAYLIST_MUSIC_DIR} doesn't exist.\nThat should be the main, top-level folder where you keep your music locally."
 	# create playlist dir if it doesnt exist.
-	if [ ! -d "$ConfDir" ]; then
+	if [[ ! -d "$ConfDir" ]]; then
 		printf "Creating playlist directory at '%s'\n" "$ConfDir"
 		mkdir -p "$ConfDir" || exit 1
 	fi
@@ -240,17 +236,13 @@ parse_args() {
 		shift # remove current item from args
 	done
 	# if nothing was passed by the user
-	if [ -z "$Action" ]; then
-		pick_command_interactive
-	fi
+	[[ -z "$Action" ]] && pick_command_interactive
 }
 
 # prompts the user with the list of commands, and lets them select one of them
 pick_command_interactive() {
 	require fzf
-	if ! rawFzfChoice=$(commands_list | fzf -i --prompt='Run > ' --history="$PromptHistoryFile"); then
-		abort "Error: You didn't provide a valid command."
-	fi
+	rawFzfChoice="$(commands_list | fzf -i --prompt='Run > ' --history="$PromptHistoryFile")" || abort "Error: You didn't provide a valid command."
 	# get the first argument (e.g. add|remove|playlist-list)
 	firstArg=("${rawFzfChoice%% *| *}")
 	parse_args "${firstArg[@]}"
@@ -259,18 +251,18 @@ pick_command_interactive() {
 # returns the playlist path for a path/name if it exists.
 # If -x is provided as the second argument, exits if playlist path doesn't exist
 get_playlist_path() {
-	fullPath=$(realpath "$1")
+	fullPath="$(realpath "$1")"
 	# if the full path exists
-	if [ -e "$fullPath" ]; then
+	if [[ -e "$fullPath" ]]; then
 		echo -e "$fullPath"
 	# else if the file is just a name (e.g. rock{,.txt} for $ConfDir/rock.txt)
 	else
 		fullPath="${ConfDir}/${1%.txt}.txt"
-		if [ -f "$fullPath" ]; then
+		if [[ -f "$fullPath" ]]; then
 			echo -e "$fullPath"
 		else
 			# if not told to exit, prints the path, even though the path may not exist
-			if [ "$2" = "-x" ]; then
+			if [[ "$2" = "-x" ]]; then
 				abort "Error: Could not find a matching playlist for: ${1}"
 			else
 				echo -e "$fullPath"
@@ -280,18 +272,14 @@ get_playlist_path() {
 }
 
 make_sure_playlists_exist() {
-	if [ "$(playlist_count)" = "0" ]; then
-		abort "Error: No playlists exist. Create one before trying to select one"
-	fi
+	(($(playlist_count) == 0)) && abort "Error: No playlists exist. Create one before trying to select one"
 }
 
 # presents the user with a prompt of playlists to choose from
 pick_existing_playlist() {
 	require fzf
 	make_sure_playlists_exist
-	if ! playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ' --preview="cat \"${ConfDir}/\"{}.txt")"; then
-		abort "Error: You didn't select a valid playlist."
-	fi
+	playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ' --preview="cat \"${ConfDir}/\"{}.txt")" || abort "Error: You didn't select a valid playlist."
 	echo -e "$playlistName"
 }
 
@@ -299,9 +287,7 @@ pick_existing_playlist() {
 pick_mutliple_existing_playlists() {
 	require fzf
 	make_sure_playlists_exist
-	if ! playlistNames="$(list_playlists | fzf -m -i --prompt="Select multiple playlists by using 'Tab' > " --preview="cat \"${ConfDir}/\"{}.txt")"; then
-		abort "Error: You didn't select a valid playlist."
-	fi
+	playlistNames="$(list_playlists | fzf -m -i --prompt="Select multiple playlists by using 'Tab' > " --preview="cat \"${ConfDir}/\"{}.txt")" || abort "Error: You didn't select a valid playlist."
 	readarray -t <<<"$playlistNames"
 	AllActivePlaylists=("${MAPFILE[@]}")
 }
@@ -330,7 +316,7 @@ convert_to_playlist_filenames() {
 	# get absolute path of all of the music to be added
 	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"$relativeFilenames")"
 	# make sure user gave data
-	[ -z "$absoluteFilenames" ] && abort "Did not recieve any filenames to add"
+	[[ -z "$absoluteFilenames" ]] && abort "Did not recieve any filenames to add"
 	# if the $MusicDir is a link, (e.g. linked to some other drive)
 	# also replace that path
 	absoluteNoLinkFilename="$(realpath "$MusicDir")"
@@ -344,9 +330,7 @@ check_playlist() {
 	printf "Checking '%s'...\n" "$playlistToCheck"
 	while read -r song; do
 		songFullPath="${MusicDir%/}/${song}"
-		if [ ! -e "$songFullPath" ]; then
-			printf "Error: '%s' doesn't exist\n" "$songFullPath" 1>&2
-		fi
+		[[ -e "$songFullPath" ]] || printf "Error: '%s' doesn't exist\n" "$songFullPath" 1>&2
 	done <"$playlistToCheck"
 }
 
@@ -368,14 +352,14 @@ run_plaintext_playlist() {
 	# Prompt user if necessary
 	case "$Action" in
 	ADD | REMOVE | LIST | UNIQUE | EXIF | PLAY | SHUFFLE | PLAYLIST_REMOVE)
-		if [ -z "$ActivePlaylist" ]; then
+		if [[ -z "$ActivePlaylist" ]]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
 		ActivePlaylist="$(get_playlist_path "$ActivePlaylist" -x)" || exit 1
 		;;
 	PLAYALL | SHUFFLEALL)
 		# if no playlist at all was selected
-		if [ -z "$ActivePlaylist" ]; then
+		if [[ -z "$ActivePlaylist" ]]; then
 			pick_mutliple_existing_playlists || exit 1
 		fi
 		# convert each item in the array to a path
@@ -387,7 +371,7 @@ run_plaintext_playlist() {
 		;;
 
 	PLAYLIST_CREATE)
-		if [ -z "$ActivePlaylist" ]; then
+		if [[ -z "$ActivePlaylist" ]]; then
 			ActivePlaylist="$(get_playlist_path "$(generic_input 'Name of new playlist: ')")" || exit 1
 		fi
 		;;
@@ -399,7 +383,7 @@ run_plaintext_playlist() {
 	# Run, based on Action
 	case "$Action" in
 	PLAYLIST_CREATE)
-		if [ -f "$ActivePlaylist" ]; then
+		if [[ -f "$ActivePlaylist" ]]; then
 			printf "Warning: Playlist '%s' already exists.\n" "$ActivePlaylist" 1>&2
 		else
 			touch "$ActivePlaylist"
@@ -419,32 +403,29 @@ run_plaintext_playlist() {
 		fi
 		;;
 	PLAYLISTDIR)
-		printf "%s\n" "$ConfDir"
+		echo "${ConfDir}"
 		;;
 	CHECK)
-		find "$ConfDir" -type f -iname "*.txt" -print0 |
-			while IFS= read -r -d '' playlistToCheck; do
-				check_playlist "$playlistToCheck"
-			done
+		while IFS= read -r -d '' playlistToCheck; do
+			check_playlist "$playlistToCheck"
+		done < <(find "${ConfDir}" -type f -iname "*.txt" -print0)
 		;;
 	RESOLVE)
-		[ ! "$(command -v resolve_cmd_plainplay)" ] && abort "Error: Couldnt find the resolve_cmd_plainplay command on your \$PATH"
+		require resolve_cmd_plainplay
 		require python3
 		resolve_cmd_plainplay "$ConfDir" "$MusicDir" "$ResolveAutoConfirm"
 		;;
 	ADD)
 		case "$ReadInputType" in
 		FROM_STDIN)
-			filenamesToAdd=$(cat)
+			filenamesToAdd="$(cat)"
 			echo -e "$filenamesToAdd" >>"$ActivePlaylist"
 			;;
 
 		MULTI_SELECT_FZF)
 			require fzf
-			if ! songsToAdd=$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > "); then
-				abort "Error: You didn't provide any songs to add..."
-			fi
-			fixedFilenames=$(convert_to_playlist_filenames <<<"$songsToAdd")
+			songsToAdd="$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > ")" || abort "Error: You didn't provide any songs to add..."
+			fixedFilenames="$(convert_to_playlist_filenames <<<"$songsToAdd")"
 			echo -e "Adding the following to ${ActivePlaylist}:"
 			echo -e "$fixedFilenames"
 			echo -e "$fixedFilenames" >>"$ActivePlaylist"
@@ -457,9 +438,7 @@ run_plaintext_playlist() {
 		;;
 	REMOVE)
 		require fzf
-		if ! linesToRemove=$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > " <"$ActivePlaylist"); then
-			abort "Error: you didn't provide any songs to remove..."
-		fi
+		linesToRemove="$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > " <"$ActivePlaylist")" || abort "Error: you didn't provide any songs to remove..."
 		filteredSongs="$(grep -Fxv "$linesToRemove" <"$ActivePlaylist")"
 		echo -e "$filteredSongs" >"$ActivePlaylist"
 		echo -e "Removed the following from ${ActivePlaylist}:"
@@ -470,16 +449,14 @@ run_plaintext_playlist() {
 		;;
 	UNIQUE)
 		require uniq
-		filteredPlaylistFile=/tmp/filtered_playlist
+		filteredPlaylistFile='/tmp/filtered_playlist'
 		uniq "$ActivePlaylist" >"$filteredPlaylistFile"
 		mv "$filteredPlaylistFile" "$ActivePlaylist"
 		printf "Ran 'uniq' on %s\n" "$ActivePlaylist"
 		;;
 	EXIF)
 		require exiftool
-		if ! filepath="$(cd "$MusicDir" && fzf +m -i --prompt="Print exiftool for > " --preview="cd \"$MusicDir\" && exiftool {}" <"$ActivePlaylist")"; then
-			abort "No filepath selected to print exif data for."
-		fi
+		filepath="$(cd "$MusicDir" && fzf +m -i --prompt="Print exiftool for > " --preview="cd \"$MusicDir\" && exiftool {}" <"$ActivePlaylist")" || abort "No filepath selected to print exif data for."
 		cd "$MusicDir" && exiftool "$filepath"
 		;;
 	PLAY)
