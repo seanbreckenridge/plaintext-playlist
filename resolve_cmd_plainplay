@@ -62,7 +62,7 @@ def check_playlist(playlist_file: str) -> List[Tuple[int, str]]:
     return broken_songpaths
 
 
-def fix_filepath(broken_songpath: str):
+def fix_filepath(broken_songpath: str) -> str:
     """
     Uses the text distance to try and fix a broken songpath,
     prompts the user if --auto-confirm wasn't passed
