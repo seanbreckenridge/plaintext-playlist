@@ -1,7 +1,7 @@
 # plaintext-playlist
 
 ```
-Usage: plaintext [-h] [-] [COMMAND [ARGS]]
+Usage: plainplay [-h] [-] [COMMAND [ARGS]]
 
   Interactive terminal playlist manager, storing contents in readable text files
   run without a COMMAND to drop into interactive mode
@@ -14,11 +14,11 @@ Usage: plaintext [-h] [-] [COMMAND [ARGS]]
   expects filenames to be in the correct format
   (cd to your Music dir and use find for good results)
 
+  e.g.: find somedirectory -name "*.flac" | plainplay - add rock
+  
   --auto-confirm can be passed with 'resolve' to automatically
   use the closest match instead of prompting you to choose
   one of the closest matching files to fix broken filepaths
-
-  e.g.: find somedirectory -name "*.flac" | plainplay - add rock
 
   <playlist> specifies either the
   name (without the location/.txt extension)
