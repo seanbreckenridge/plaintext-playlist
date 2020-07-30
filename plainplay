@@ -437,7 +437,7 @@ run_plaintext_playlist() {
 		;;
 	REMOVE)
 		require fzf
-		linesToRemove="$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > " <"$ActivePlaylist")" || abort "Error: you didn't provide any songs to remove..."
+		linesToRemove="$(fzf -m -i --prompt="Select songs to remove. Hit 'Tab' to select multiple > " <"$ActivePlaylist")" || abort "Error: you didn't provide any songs to remove..."
 		filteredSongs="$(grep -Fxv "$linesToRemove" <"$ActivePlaylist")"
 		echo -e "$filteredSongs" >"$ActivePlaylist"
 		echo -e "Removed the following from ${ActivePlaylist}:"
