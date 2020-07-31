@@ -73,7 +73,7 @@ As an example, I use the `mpv` IPC server (see [`mpv-sockets`](https://github.co
 To add the currently playing song to a playlist by selecting one interactively:
 
 ```
-recent_socket=$(mpv-active-sockets | tail -n 1)
+recent_socket=$(mpv-active-sockets | sort -n | tail -n 1)
 echo "$(mpv-get-property "$recent_socket" working-directory)/$(mpv-get-property "$recent_socket" path)" | cut -d"/" -f6- | plainplay - add
 ```
 
