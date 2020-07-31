@@ -24,7 +24,11 @@ Usage: plainplay [-h] [-] [COMMAND [ARGS]]
   name (without the location/.txt extension)
   or the location of one of the playlists
 
+  curplaying using my mpv-currently-playing script at
+  https://github.com/seanbreckenridge/mpv-sockets
+
 add <playlist>                | Adds one or more songs to a playlist
+curplaying <playlist>         | Adds a currently playing mpv song to a playlist
 remove <playlist>             | Removes one of more songs from a playlist
 play <playlist>               | Play songs from a playlist
 playall <playlist>...         | Play songs from multiple playlists
@@ -68,14 +72,16 @@ This only stores the relative filepath to your base music directory in each file
 
 ### Scripting
 
-As an example, I use the `mpv` IPC server (see [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets)), which I use to send commands to the currently running `mpv` instance.
+As an example, I use the `mpv` IPC server (see [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets)), which I use to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints a list of currently playing media, so its easily integrated into the `curplaying` command.
 
-To add the currently playing song to a playlist by selecting one interactively:
+If I want to selectively play music from playlists, I can do so using common unix tools, like:
 
 ```
-recent_socket=$(mpv-active-sockets | tail -n 1)
-echo "$(mpv-get-property "$recent_socket" working-directory)/$(mpv-get-property "$recent_socket" path)" | cut -d"/" -f6- | plainplay - add
+$ cd ~/Music
+$ grep -hiE 'mario|runescape|kirby|pokemon' $(find $(plainplay playlistdir) -type f) | shuf | mpv --playlist=-
 ```
+
+... which would shuffle music from my playlists which match `mario|runescape|kirby|pokemon`
 
 ### Configuration/Installation
 
