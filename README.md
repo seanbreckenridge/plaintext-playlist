@@ -66,6 +66,17 @@ This only stores the relative filepath to your base music directory in each file
 
 `resolve` will use the dice coefficient to try and resolve the broken filepath to an existing filepath in your music directory.
 
+### Scripting
+
+As an example, I use the `mpv` IPC server (see [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets)), which I use to send commands to the currently running `mpv` instance.
+
+To add the currently playing song to a playlist by selecting one interactively:
+
+```
+recent_socket=$(mpv-active-sockets | tail -n 1)
+echo "$(mpv-get-property "$recent_socket" working-directory)/$(mpv-get-property "$recent_socket" path)" | cut -d"/" -f6- | plainplay - add
+```
+
 ### Configuration/Installation
 
 To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
