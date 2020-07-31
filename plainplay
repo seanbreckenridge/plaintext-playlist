@@ -318,18 +318,23 @@ generic_input() {
 }
 
 # uses the current directory plus passed filenames to resolve relative paths
-# into the correct format for a playlist file. accepts relative filenames from stdin
 convert_to_playlist_filenames() {
 	relativeFilenames="$(cat)"
 	# get absolute path of all of the music to be added
 	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"$relativeFilenames")"
 	# make sure user gave data
 	[[ -z "$absoluteFilenames" ]] && abort "Did not recieve any filenames to add"
+	echo -e "$absoluteFilenames" | remove_music_dir
+}
+
+# converts absolute paths to paths relative to the music dir
+remove_music_dir() {
 	# if the $MusicDir is a link, (e.g. linked to some other drive)
 	# also replace that path
 	absoluteNoLinkFilename="$(realpath "$MusicDir")"
-	# convert to relative filenames:
-	echo -e "$absoluteFilenames" | sed -e "s|^${MusicDir%/}/||" -e "s|^${absoluteNoLinkFilename%/}/||"
+	# convert to relative filenames:'
+	# (recieves input from STDIN)
+	sed -e "s|^${MusicDir%/}/||" -e "s|^${absoluteNoLinkFilename%/}/||"
 }
 
 # checks a playlist file for broken paths
@@ -454,9 +459,10 @@ run_plaintext_playlist() {
 		if [[ "$curPlayingSongsCount" == 1 ]]; then
 			chosenSong="${curPlayingSongs}"
 		else
+			require fzf
 			chosenSong="$(fzf -m -i --prompt="Select which currently playing song to add > " <<<"$curPlayingSongs")" || abort "You didn't select one of the songs"
 		fi
-		relativeFileName="$(convert_to_playlist_filenames <<<"$chosenSong")"
+		relativeFileName="$(remove_music_dir <<<"$chosenSong")"
 		echo -e "Adding currently playing song to ${ActivePlaylist}"
 		echo -e "$relativeFileName"
 		echo -e "$relativeFileName" >>"$ActivePlaylist"
