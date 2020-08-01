@@ -332,7 +332,7 @@ remove_music_dir() {
 	# if the $MusicDir is a link, (e.g. linked to some other drive)
 	# also replace that path
 	absoluteNoLinkFilename="$(realpath "$MusicDir")"
-	# convert to relative filenames:'
+	# convert to relative filenames:
 	# (recieves input from STDIN)
 	sed -e "s|^${MusicDir%/}/||" -e "s|^${absoluteNoLinkFilename%/}/||"
 }

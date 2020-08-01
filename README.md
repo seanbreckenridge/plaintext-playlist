@@ -45,6 +45,8 @@ check                         | Makes sure that all songs in all your playlists 
 resolve                       | Attempts to fix broken paths in playlists
 ```
 
+### [Demo Video](https://sean.fish/p/plainplay_demo.mp4)
+
 ## Rationale
 
 I wanted a minimal, scriptable-friendly playlist for my local music, without having to rely on a third party playlist manager/GUI interface.
