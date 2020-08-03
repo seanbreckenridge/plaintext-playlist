@@ -83,13 +83,13 @@ $ cd ~/Music
 $ grep -hiE 'mario|runescape|kirby|pokemon' $(find $(plainplay playlistdir) -type f) | shuf | mpv --playlist=-
 ```
 
+... which would shuffle music from my playlists which match `mario|runescape|kirby|pokemon`
+
 I often use this alias:
 
 `alias splayall='plainplay shuffleall "$(plainplay playlistdir)"/*'`
 
 ... to shuffle all the music I have listed in playlists. If somethings in a playlist, I generally am a fan of it, but shuffling all the things in my music directory would mean I'd just be listening to soundtracks half the time.
-
-... which would shuffle music from my playlists which match `mario|runescape|kirby|pokemon`
 
 ### Configuration/Installation
 
