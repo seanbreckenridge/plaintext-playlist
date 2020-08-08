@@ -91,6 +91,10 @@ I often use this alias:
 
 ... to shuffle all the music I have listed in playlists. If somethings in a playlist, I generally am a fan of it, but shuffling all the things in my music directory would mean I'd just be listening to soundtracks half the time.
 
+To create an archive of a playlist, can use tar like:
+
+`tar -cvf playlist_name.tar -T <(plainplay list <playlistname>)`
+
 ### Configuration/Installation
 
 To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
