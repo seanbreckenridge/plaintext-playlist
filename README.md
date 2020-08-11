@@ -95,6 +95,8 @@ To create an archive of a playlist, can use tar like:
 
 `tar -cvf playlist_name.tar -T <(plainplay list <playlistname>)`
 
+I have a script [here](https://github.com/seanbreckenridge/vps/blob/master/playlist) which I use to combine multiple playlists into one long `mp3` file, which I then sync up to my server, so I can listen to it on my phone.
+
 ### Configuration/Installation
 
 To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
