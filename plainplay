@@ -456,7 +456,7 @@ run_plaintext_playlist() {
 		curPlayingSongsCount="$(wc -l <<<"$curPlayingSongs")"
 		[[ -z "$curPlayingSongs" ]] && abort "Did not receieve any paths from active mpv instances"
 		# if theres only one playing, select that, else fzf to select one of the playing songs
-		if [[ "$curPlayingSongsCount" == 1 ]]; then
+		if ((curPlayingSongsCount == 1)); then
 			chosenSong="${curPlayingSongs}"
 		else
 			require fzf
