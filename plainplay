@@ -452,7 +452,7 @@ run_plaintext_playlist() {
 	CURPLAYING)
 		require mpv-currently-playing
 		# get currently playing songs, limit to items which arent paused
-		curPlayingSongs="$(MPV_IS_PLAYING=1 mpv-currently-playing cat 2>/dev/null)"
+		curPlayingSongs="$(mpv-currently-playing 2>/dev/null)"
 		curPlayingSongsCount="$(wc -l <<<"$curPlayingSongs")"
 		[[ -z "$curPlayingSongs" ]] && abort "Did not receieve any paths from active mpv instances"
 		# if theres only one playing, select that, else fzf to select one of the playing songs
