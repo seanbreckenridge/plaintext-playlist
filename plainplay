@@ -17,7 +17,7 @@ declare ResolveAutoConfirm=
 declare Action=
 declare ActivePlaylist=
 # used for shuffleall/playall
-declare AllActivePlaylists=()
+declare -a AllActivePlaylists=()
 
 readonly PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-$HOME/.cache}}/plaintext_playlist_history.txt"
 
