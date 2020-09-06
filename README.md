@@ -10,7 +10,7 @@ Usage: plainplay [-h] [-] [COMMAND [ARGS]]
   fzf interface to add/remove items.
 
   A hyphen (-) can be passed with add
-  to instead recieve filenames from stdin
+  to instead receive filenames from stdin
   expects filenames to be in the correct format
   (cd to your Music dir and use find for good results)
 

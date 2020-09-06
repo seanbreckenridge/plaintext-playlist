@@ -74,7 +74,7 @@ Usage: plainplay [-h] [-] [COMMAND [ARGS]]
   fzf interface to add/remove items.
 
   A hyphen (-) can be passed with add
-  to instead recieve filenames from stdin
+  to instead receive filenames from stdin
   expects filenames to be in the correct format
   (cd to your Music dir and use find for good results)
 
@@ -293,7 +293,7 @@ pick_existing_playlist() {
 }
 
 # sets AllActivePlaylists to whatever the user selects
-pick_mutliple_existing_playlists() {
+pick_multiple_existing_playlists() {
 	require fzf
 	make_sure_playlists_exist
 	playlistNames="$(list_playlists | fzf -m -i --prompt="Select multiple playlists by using 'Tab' > " --preview="cat \"${ConfDir}/\"{}.txt")" || abort "Error: You didn't select a valid playlist."
@@ -323,7 +323,7 @@ convert_to_playlist_filenames() {
 	# get absolute path of all of the music to be added
 	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"$relativeFilenames")"
 	# make sure user gave data
-	[[ -z "$absoluteFilenames" ]] && abort "Did not recieve any filenames to add"
+	[[ -z "$absoluteFilenames" ]] && abort "Did not receive any filenames to add"
 	echo -e "$absoluteFilenames" | remove_music_dir
 }
 
@@ -333,7 +333,7 @@ remove_music_dir() {
 	# also replace that path
 	absoluteNoLinkFilename="$(realpath "$MusicDir")"
 	# convert to relative filenames:
-	# (recieves input from STDIN)
+	# (receives input from STDIN)
 	sed -e "s|^${MusicDir%/}/||" -e "s|^${absoluteNoLinkFilename%/}/||"
 }
 
@@ -373,7 +373,7 @@ run_plaintext_playlist() {
 	PLAYALL | SHUFFLEALL)
 		# if no playlist at all was selected
 		if [[ -z "$ActivePlaylist" ]]; then
-			pick_mutliple_existing_playlists || exit 1
+			pick_multiple_existing_playlists || exit 1
 		fi
 		# convert each item in the array to a path
 		local tempResult=()
