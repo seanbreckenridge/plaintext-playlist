@@ -51,7 +51,7 @@ playall <playlist>...         | Play songs from multiple playlists
 shuffle <playlist>            | Shuffle songs from a playlist
 shuffleall <playlist>...      | Shuffle songs from multiple playlists
 list <playlist>               | List songs in a playlist
-unique <playlist>             | Removes duplicates from a playlist
+unique <playlist>             | Reduce a playlist to unique songs
 exif <playlist>               | Displays exif data for items in a playlist
 playlist-create <playlist>    | Creates a new playlist - a playlist file
 playlist-remove <playlist>    | Removes an existing playlist - deletes a playlist file
