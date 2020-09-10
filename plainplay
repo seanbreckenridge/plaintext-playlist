@@ -54,7 +54,7 @@ list <playlist>               | List songs in a playlist
 unique <playlist>             | Reduce a playlist to unique songs
 exif <playlist>               | Displays exif data for items in a playlist
 playlist-create <playlist>    | Creates a new playlist - a playlist file
-playlist-remove <playlist>    | Removes an existing playlist - deletes a playlist file
+playlist-delete <playlist>    | Delete an existing playlist - a playlist file
 playlist-list                 | List the full paths of each of your playlist files
 playlistdir                   | Print the location of the playlist directory
 check                         | Makes sure that all songs in all your playlists exist
@@ -114,113 +114,55 @@ application_setup() {
 	# error if user hasn't set music dir
 	MusicDir="${PLAINTEXT_PLAYLIST_MUSIC_DIR?:'ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your root music folder) is not set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay.'}"
 	[[ -d "$MusicDir" ]] || abort "Error: ${PLAINTEXT_PLAYLIST_MUSIC_DIR} doesn't exist.\nThat should be the main, top-level folder where you keep your music locally."
-	# create playlist dir if it doesnt exist.
+	# create playlist dir if it doesn't exist.
 	if [[ ! -d "$ConfDir" ]]; then
 		printf "Creating playlist directory at '%s'\n" "$ConfDir"
 		mkdir -p "$ConfDir" || exit 1
 	fi
 }
 
+
 # ARGUMENT PARSING/PROMPTING
+
+# converts something like 'list to LIST', 'playlist-create to PLAYLIST_CREATE'
+parse_command() {
+	local uppercase="${1^^}" || abort "Couldn't uppercase characters. You're probably on an ancient version of 'bash'"
+	echo -e "${uppercase/-/_}"  # replace hyphens for underscores
+}
 
 # parse arguments from command line.
 parse_args() {
 	while [[ -n "$1" ]]; do
 		case "$1" in
-		add)
-			Action=ADD
-			ActivePlaylist="$2"
-			shift
-			;;
-		curplaying)
-			Action=CURPLAYING
-			ActivePlaylist="$2"
-			shift
-			;;
-		remove)
-			Action=REMOVE
-			ActivePlaylist="$2"
-			shift
-			;;
-		list)
-			Action=LIST
-			ActivePlaylist="$2"
-			shift
-			break
-			;;
-		play)
-			Action=PLAY
-			ActivePlaylist="$2"
-			shift
-			break
+		# command that optionally accept one playlist
+		add | curplaying | remove | list | play | shuffle | unique | exif | playlist-create | playlist-delete)
+			Action="$(parse_command "$1")"
+			ActivePlaylist="$2" # get playlist name
+			shift               # shift command name off args, playlist name gets shifted off at the bottom of the while loop
+			# possible to just break here, but then the catchall case argument
+			# below wouldn't check if you provided extra erroneous arguments
 			;;
 
-		playall)
-			Action=PLAYALL
-			ActivePlaylist="$2"
-			AllActivePlaylists+=("$2")
+		# commands that just accept the command name, nothing else
+		playlist-list | playlistdir | check)
+			Action="$(parse_command "$1")"
 			shift
 			;;
 
-		shuffle)
-			Action=SHUFFLE
-			ActivePlaylist="$2"
-			shift
-			break
-			;;
-
-		shuffleall)
-			Action=SHUFFLEALL
-			ActivePlaylist="$2"
-			AllActivePlaylists+=("$2")
-			shift
-			;;
-
-		unique)
-			Action=UNIQUE
-			ActivePlaylist="$2"
-			shift
-			break
-			;;
-
-		exif)
-			Action=EXIF
-			ActivePlaylist="$2"
-			shift
-			break
-			;;
-
-		playlist-create)
-			Action=PLAYLIST_CREATE
-			ActivePlaylist="$2"
-			shift
-			break
-			;;
-
-		playlist-remove)
-			Action=PLAYLIST_REMOVE
-			ActivePlaylist="$2"
-			shift
-			break
-			;;
-
-		playlist-list)
-			Action=PLAYLIST_LIST
-			break
-			;;
-
-		playlistdir)
-			Action=PLAYLISTDIR
-			break
-			;;
-
-		check)
-			Action=CHECK
-			break
-			;;
+		# commands that accept the command name, and perhaps other flags
 		resolve)
-			Action=RESOLVE
+			Action="$(parse_command "$1")"
 			;;
+
+		# commands that accept more than one playlist
+		playall | shuffleall)
+			Action="$(parse_command "$1")"
+			ActivePlaylist="$2"
+			AllActivePlaylists+=("$2")
+			shift
+			;;
+
+		# parse extra flags
 		-)
 			ReadInputType=FROM_STDIN
 			;;
@@ -230,7 +172,7 @@ parse_args() {
 
 		*)
 			case "$Action" in
-			# if this is SHUFFLEALL or PLAYALL, save extra arguments
+			# if this is SHUFFLEALL or PLAYALL, save extra arguments (playlists)
 			*ALL)
 				AllActivePlaylists+=("$1")
 				;;
@@ -364,7 +306,7 @@ run_plaintext_playlist() {
 	# Validate Playlist based on given arguments
 	# Prompt user if necessary
 	case "$Action" in
-	ADD | CURPLAYING | REMOVE | LIST | UNIQUE | EXIF | PLAY | SHUFFLE | PLAYLIST_REMOVE)
+	ADD | CURPLAYING | REMOVE | LIST | UNIQUE | EXIF | PLAY | SHUFFLE | PLAYLIST_DELETE)
 		if [[ -z "$ActivePlaylist" ]]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
@@ -407,7 +349,7 @@ run_plaintext_playlist() {
 		find "$ConfDir" -type f -iname "*.txt"
 		;;
 
-	PLAYLIST_REMOVE)
+	PLAYLIST_DELETE)
 		printf "Are you sure you want to delete '%s'? [y/N] " "$ActivePlaylist"
 		read -r "response"
 		if [[ $response =~ ^[Yy] ]]; then
