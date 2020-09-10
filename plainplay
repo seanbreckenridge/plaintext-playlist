@@ -43,18 +43,19 @@ require sed
 # A list of commands
 commands_list() {
 	cat <<EOF
-add <playlist>                | Adds one or more songs to a playlist
-curplaying <playlist>         | Adds a currently playing mpv song to a playlist
-remove <playlist>             | Removes one of more songs from a playlist
-play <playlist>               | Play songs from a playlist
-playall <playlist>...         | Play songs from multiple playlists
-shuffle <playlist>            | Shuffle songs from a playlist
-shuffleall <playlist>...      | Shuffle songs from multiple playlists
-list <playlist>               | List songs in a playlist
-unique <playlist>             | Reduce a playlist to unique songs
-exif <playlist>               | Displays exif data for items in a playlist
-playlist-create <playlist>    | Creates a new playlist - a playlist file
-playlist-delete <playlist>    | Delete an existing playlist - a playlist file
+add [playlist]                | Adds one or more songs to a playlist
+curplaying [playlist]         | Adds a currently playing mpv song to a playlist
+remove [playlist]             | Removes one of more songs from a playlist
+play [playlist]               | Play songs from a playlist
+playall [playlist]...         | Play songs from multiple playlists
+shuffle [playlist]            | Shuffle songs from a playlist
+shuffleall [playlist]...      | Shuffle songs from multiple playlists
+list [playlist]               | List songs in a playlist
+listall [playlist]...         | List songs from multiple playlists
+unique [playlist]             | Reduce a playlist to unique songs
+exif [playlist]               | Displays exif data for items in a playlist
+playlist-create [playlist]    | Creates a new playlist - a playlist file
+playlist-delete [playlist]    | Delete an existing playlist - a playlist file
 playlist-list                 | List the full paths of each of your playlist files
 playlistdir                   | Print the location of the playlist directory
 check                         | Makes sure that all songs in all your playlists exist
@@ -65,17 +66,14 @@ EOF
 # print help for user
 print_help() {
 	cat <<EOF
-Usage: plainplay [-h] [-] [COMMAND [ARGS]]
+Usage: plainplay [-h] [-] [COMMAND [ARGS] [OPTIONS]]
 
-  Interactive terminal playlist manager, storing contents in readable text files
+  An interactive terminal playlist manager; stores playlists as text files
   run without a COMMAND to drop into interactive mode
 
-  add and remove defaults to presenting you an
-  fzf interface to add/remove items.
-
-  A hyphen (-) can be passed with add
-  to instead receive filenames from stdin
-  expects filenames to be in the correct format
+  A hyphen (-) can be passed with add to instead
+	receive filenames from stdin. expects filenames to
+	be in the correct format
   (cd to your Music dir and use find for good results)
 
   e.g.: find somedirectory -name "*.flac" | plainplay - add rock
@@ -84,7 +82,7 @@ Usage: plainplay [-h] [-] [COMMAND [ARGS]]
   use the closest match instead of prompting you to choose
   one of the closest matching files to fix broken filepaths
 
-  <playlist> specifies either the
+  [playlist] specifies either the
   name (without the location/.txt extension)
   or the location of one of the playlists
 
@@ -155,7 +153,7 @@ parse_args() {
 			;;
 
 		# commands that accept more than one playlist
-		playall | shuffleall)
+		playall | shuffleall | listall)
 			Action="$(parse_command "$1")"
 			ActivePlaylist="$2"
 			AllActivePlaylists+=("$2")
@@ -172,7 +170,7 @@ parse_args() {
 
 		*)
 			case "$Action" in
-			# if this is SHUFFLEALL or PLAYALL, save extra arguments (playlists)
+			# if this is LISTALL, SHUFFLEALL or PLAYALL, save extra arguments (playlists)
 			*ALL)
 				AllActivePlaylists+=("$1")
 				;;
@@ -312,7 +310,7 @@ run_plaintext_playlist() {
 		fi
 		ActivePlaylist="$(get_playlist_path "$ActivePlaylist" -x)" || exit 1
 		;;
-	PLAYALL | SHUFFLEALL)
+	PLAYALL | SHUFFLEALL | LISTALL)
 		# if no playlist at all was selected
 		if [[ -z "$ActivePlaylist" ]]; then
 			pick_multiple_existing_playlists || exit 1
@@ -419,6 +417,9 @@ run_plaintext_playlist() {
 		;;
 	LIST)
 		cat "$ActivePlaylist"
+		;;
+	LISTALL)
+		cd "$MusicDir" && safe_concat
 		;;
 	UNIQUE)
 		require uniq
