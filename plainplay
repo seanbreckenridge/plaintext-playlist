@@ -119,13 +119,12 @@ application_setup() {
 	fi
 }
 
-
 # ARGUMENT PARSING/PROMPTING
 
 # converts something like 'list to LIST', 'playlist-create to PLAYLIST_CREATE'
 parse_command() {
 	local uppercase="${1^^}" || abort "Couldn't uppercase characters. You're probably on an ancient version of 'bash'"
-	echo -e "${uppercase/-/_}"  # replace hyphens for underscores
+	echo -e "${uppercase/-/_}" # replace hyphens for underscores
 }
 
 # parse arguments from command line.
@@ -279,12 +278,18 @@ remove_music_dir() {
 
 # checks a playlist file for broken paths
 check_playlist() {
+	local playlistToCheck ret
 	playlistToCheck="$1"
+	ret=0
 	printf "Checking '%s'...\n" "$playlistToCheck"
 	while read -r song; do
 		songFullPath="${MusicDir%/}/${song}"
-		[[ -e "$songFullPath" ]] || printf "Error: '%s' doesn't exist\n" "$songFullPath" 1>&2
+		[[ -e "$songFullPath" ]] || {
+			ret=1
+			printf "Error: '%s' doesn't exist\n" "$songFullPath" 1>&2
+		}
 	done <"$playlistToCheck"
+	return "$ret"
 }
 
 # safely concatenates the files in AllActivePlaylists, prints the result to STDOUT
@@ -359,9 +364,11 @@ run_plaintext_playlist() {
 		echo "${ConfDir}"
 		;;
 	CHECK)
+		ret=0
 		while IFS= read -r -d '' playlistToCheck; do
-			check_playlist "$playlistToCheck"
+			check_playlist "$playlistToCheck" || ret=1
 		done < <(find "${ConfDir}" -type f -iname "*.txt" -print0)
+		exit "$ret"
 		;;
 	RESOLVE)
 		require resolve_cmd_plainplay
