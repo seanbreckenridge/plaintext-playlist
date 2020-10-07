@@ -431,9 +431,10 @@ run_plaintext_playlist() {
 	UNIQUE)
 		require uniq
 		filteredPlaylistFile='/tmp/filtered_playlist'
-		uniq "$ActivePlaylist" >"$filteredPlaylistFile"
+		beforeCount="$(wc -l <"$ActivePlaylist")"
+		cat -n "$ActivePlaylist" | sort -uk2 | sort -nk1 | cut -f2- >"$filteredPlaylistFile"
 		mv "$filteredPlaylistFile" "$ActivePlaylist"
-		printf "Ran 'uniq' on %s\n" "$ActivePlaylist"
+		printf "Filtered '%s' to unique lines. (%d before, %d now)\n" "$ActivePlaylist" "$beforeCount" "$(wc -l <"$ActivePlaylist")"
 		;;
 	EXIF)
 		require exiftool
