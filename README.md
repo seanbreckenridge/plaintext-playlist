@@ -81,14 +81,15 @@ This only stores the relative filepath to your base music directory in each file
 
 As an example, I use the `mpv` IPC server (see [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets)), which I use to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints a list of currently playing media, so its easily integrated into the `curplaying` command.
 
-If I want to selectively play music from playlists, I can do so using common unix tools, like:
+If I want to selectively play songs from multiple playlists, I can do so using common unix tools, like:
 
 ```
 $ cd ~/Music
-$ grep -hiE 'mario|runescape|kirby|pokemon' $(find $(plainplay playlistdir) -type f) | shuf | mpv --playlist=-
+$ grep -hiE 'mario|runescape|kirby|pokemon' $(find $(plainplay playlistdir) -type f) \
+	| shuf | mpv --playlist=-
 ```
 
-... which would shuffle music from my playlists which match `mario|runescape|kirby|pokemon`
+... which would shuffle songs from my playlists which match `mario|runescape|kirby|pokemon`
 
 I often use this alias:
 
@@ -114,13 +115,15 @@ cd plaintext-playlist
 cp plainplay resolve_cmd_plainplay ~/.local/bin
 ```
 
-Reqiures at least `bash` version 4.0.
+Requires at least `bash` version 4.0.
 
-External dependencies: `mpv`, `fzf`, `python3`, (`pip3 install --user -U textdistance pick`). If you don't use commands that require some dependency (e.g. you never call `resolve`), the corresponding dependency isn't required.
+External dependencies: `mpv`, `fzf`, `python3`,(`pip3 install --user -U textdistance pick`), `ffprobe` (installed with `ffmpeg`), `jq`
 
-Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_PLAYLISTS` (defaults to `~/.local/share/plaintext_playlist`). If the environment variable is set, overrides the location.
+This follows 'Progressive Enhancement' with regard to external dependencies; for example, if you never use `resolve`, the corresponding dependency isn't required. Before you use a command it checks if you have the required external commands installed.
 
-Must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory. If you don't have one place you keep all your music, you can set your `$HOME` directory, or `/`, which would cause the playlist files to use absolute paths instead. However, that would make the `resolve` function work very slowly, since it would have to search your entire system to find paths to match broken paths against.
+Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_PLAYLISTS` (defaults to `~/.local/share/plaintext_playlist`).
+
+You must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory. If you don't have one place you keep all your music, you can set your `$HOME` directory, or `/`, which would cause the playlist files to use absolute paths instead. However, that would make the `resolve` function work very slowly, since it would have to search your entire system to find paths to match broken paths against.
 
 ### Specification
 
