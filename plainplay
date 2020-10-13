@@ -453,21 +453,21 @@ run_plaintext_playlist() {
 		done < <(cd "$MusicDir" && safe_concat)
 		printf '#EXTM3U\n'
 		for fp in "${filepaths[@]}"; do
-			metadata_json="$(cd "$MusicDir" && ffprobe -v quiet -print_format json -show_format "$fp")" || {
+			metadataJson="$(cd "$MusicDir" && ffprobe -v quiet -print_format json -show_format "$fp")" || {
 				echo -e "ffprobe failed for ${fp}" 1>&2
 				continue
 			}
-			duration_float="$(jq -r '.format.duration' <<<"$metadata_json")"
-			duration_int="${duration_float%%.*}"
-			artist_name="$(jq -r '.format.tags.artist' <<<"$metadata_json")"
-			track_name="$(jq -r '.format.tags.title' <<<"$metadata_json")"
-			printf '#EXTINF:%d' "${duration_int}"
+			durationFloat="$(jq -r '.format.duration' <<<"$metadataJson")"
+			durationInt="${durationFloat%%.*}"
+			artistName="$(jq -r '.format.tags.artist' <<<"$metadataJson")"
+			trackName="$(jq -r '.format.tags.title' <<<"$metadataJson")"
+			printf '#EXTINF:%d' "${durationInt}"
 			# if we got both a artist and track name, include that in the metadata
-			if [[ "$artist_name" == 'null' || "$track_name" == 'null' ]]; then
+			if [[ "$artistName" == 'null' || "$trackName" == 'null' ]]; then
 				# no additional metadata, just print a newline
 				printf '\n'
 			else
-				printf ',%s - %s\n' "$artist_name" "$track_name"
+				printf ',%s - %s\n' "$artistName" "$trackName"
 			fi
 			printf '%s\n' "${fp}"
 		done
