@@ -84,11 +84,11 @@ Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
   use the closest match instead of prompting you to choose
   one of the closest matching files to fix broken filepaths
 
-	--abs can be passed with 'm3u' to use absolute
-	paths for the generated m3u file, instead of paths
-	relative to your Music directory
+  --abs can be passed with 'm3u' to use absolute
+  paths for the generated m3u file, instead of paths
+  relative to your Music directory
 
-	e.g. plainplay --abs m3u rock
+  e.g. plainplay --abs m3u rock
 
   [playlist] specifies either the
   name (without the location/.txt extension)
