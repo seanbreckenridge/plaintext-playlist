@@ -14,6 +14,7 @@ declare MusicDir=
 # defaults to fzf interactive if not set
 declare ReadInputType=MULTI_SELECT_FZF
 declare ResolveAutoConfirm=
+declare PlaylistPathsMode=RELATIVE
 declare Action=
 declare ActivePlaylist=
 # used for shuffleall/playall
@@ -26,13 +27,13 @@ export FZF_DEFAULT_COMMAND="find -type f | sort"
 
 # error helper
 abort() {
-	echo "$1" 1>&2
+	printf '%s\n' "$1" 1>&2
 	exit 1
 }
 
 # require that a executable be installed
 require() {
-	[[ $(command -v "$1") ]] || abort "This part of the application requires ${1}, but I can't seem to find it on your \$PATH"
+	[[ $(command -v "$1") ]] || abort "This part of the application requires '${1}', could not find it on your \$PATH"
 }
 require realpath
 require printf
@@ -54,6 +55,7 @@ list [playlist]               | List songs in a playlist
 listall [playlist]...         | List songs from multiple playlists
 unique [playlist]             | Reduce a playlist to unique songs
 exif [playlist]               | Displays exif data for items in a playlist
+m3u [playlist]...             | Create a m3u playlist file from multiple playlists
 playlist-create [playlist]    | Creates a new playlist - a playlist file
 playlist-delete [playlist]    | Delete an existing playlist - a playlist file
 playlist-list                 | List the full paths of each of your playlist files
@@ -66,7 +68,7 @@ EOF
 # print help for user
 print_help() {
 	cat <<EOF
-Usage: plainplay [-h] [-] [COMMAND [ARGS] [OPTIONS]]
+Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
 
   An interactive terminal playlist manager; stores playlists as text files
   run without a COMMAND to drop into interactive mode
@@ -81,6 +83,12 @@ Usage: plainplay [-h] [-] [COMMAND [ARGS] [OPTIONS]]
   --auto-confirm can be passed with 'resolve' to automatically
   use the closest match instead of prompting you to choose
   one of the closest matching files to fix broken filepaths
+
+	--abs can be passed with 'm3u' to use absolute
+	paths for the generated m3u file, instead of paths
+	relative to your Music directory
+
+	e.g. plainplay --abs m3u rock
 
   [playlist] specifies either the
   name (without the location/.txt extension)
@@ -131,6 +139,18 @@ parse_command() {
 parse_args() {
 	while [[ -n "$1" ]]; do
 		case "$1" in
+
+		# parse extra flags
+		-)
+			ReadInputType=FROM_STDIN
+			;;
+		--auto-confirm)
+			ResolveAutoConfirm="--auto-confirm"
+			;;
+		--abs)
+			PlaylistPathsMode=ABSOLUTE
+			;;
+
 		# command that optionally accept one playlist
 		add | curplaying | remove | list | play | shuffle | unique | exif | playlist-create | playlist-delete)
 			Action="$(parse_command "$1")"
@@ -152,25 +172,17 @@ parse_args() {
 			;;
 
 		# commands that accept more than one playlist
-		playall | shuffleall | listall)
+		playall | shuffleall | listall | m3u)
 			Action="$(parse_command "$1")"
 			ActivePlaylist="$2"
 			AllActivePlaylists+=("$2")
 			shift
 			;;
 
-		# parse extra flags
-		-)
-			ReadInputType=FROM_STDIN
-			;;
-		--auto-confirm)
-			ResolveAutoConfirm="--auto-confirm"
-			;;
-
 		*)
 			case "$Action" in
 			# if this is LISTALL, SHUFFLEALL or PLAYALL, save extra arguments (playlists)
-			*ALL)
+			*ALL | M3U)
 				AllActivePlaylists+=("$1")
 				;;
 			*)
@@ -315,7 +327,7 @@ run_plaintext_playlist() {
 		fi
 		ActivePlaylist="$(get_playlist_path "$ActivePlaylist" -x)" || exit 1
 		;;
-	PLAYALL | SHUFFLEALL | LISTALL)
+	PLAYALL | SHUFFLEALL | LISTALL | M3U)
 		# if no playlist at all was selected
 		if [[ -z "$ActivePlaylist" ]]; then
 			pick_multiple_existing_playlists || exit 1
@@ -427,6 +439,38 @@ run_plaintext_playlist() {
 		;;
 	LISTALL)
 		cd "$MusicDir" && safe_concat
+		;;
+	M3U)
+		require jq
+		require ffprobe
+		local -a filepaths=()
+		while read -r song; do
+			if [[ "$PlaylistPathsMode" == 'ABSOLUTE' ]]; then
+				filepaths+=("${MusicDir%/}/${song}")
+			else
+				filepaths+=("${song}")
+			fi
+		done < <(cd "$MusicDir" && safe_concat)
+		printf '#EXTM3U\n'
+		for fp in "${filepaths[@]}"; do
+			metadata_json="$(cd "$MusicDir" && ffprobe -v quiet -print_format json -show_format "$fp")" || {
+				echo -e "ffprobe failed for ${fp}" 1>&2
+				continue
+			}
+			duration_float="$(jq -r '.format.duration' <<<"$metadata_json")"
+			duration_int="${duration_float%%.*}"
+			artist_name="$(jq -r '.format.tags.artist' <<<"$metadata_json")"
+			track_name="$(jq -r '.format.tags.title' <<<"$metadata_json")"
+			printf '#EXTINF:%d' "${duration_int}"
+			# if we got both a artist and track name, include that in the metadata
+			if [[ "$artist_name" == 'null' || "$track_name" == 'null' ]]; then
+				# no additional metadata, just print a newline
+				printf '\n'
+			else
+				printf ',%s - %s\n' "$artist_name" "$track_name"
+			fi
+			printf '%s\n' "${fp}"
+		done
 		;;
 	UNIQUE)
 		require uniq
