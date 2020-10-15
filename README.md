@@ -58,17 +58,7 @@ I wanted a minimal, scriptable-friendly playlist for my local music, without hav
 
 _This stores playlists as text files, one per playlist, where each line is the (relative) path to a song in the playlist._
 
-This includes a `fzf` backed interactive mode, which lets you create/edit playlists by fuzzy matching against playlist names/songs. However, you're not required to use it, you can edit the playlist by running commands like:
-
-`cd $HOME/Music && find Daft\ Punk/2013\ -\ Random\ Access\ Memories -name "*.mp3" | sort -n >> ~/.local/share/plaintext_playlist/electronic.txt`
-
-... to append the filenames of all (or some, by `grep`ing against the output/doing whatever you want to edit the playlist.txt file) of the songs in some folder to a playlist without ever running `plainplay`.
-
-If you later want to remove songs, you could either edit the file manually and remove the corresponding lines, or use something like `sed` to match against the Artist/Album name to delete those lines.
-
-Playlists are played through `mpv`, by using the `--playlist` flag, reading from `STDIN`, which could also be done without `plainplay`:
-
-`cd $HOME/Music && mpv --playlist=- < "$HOME/.local/share/plaintext_playlist/electronic.txt"`
+This includes a [`fzf`](https://github.com/junegunn/fzf) backed interactive mode. If you don't provide a playlist, this drops into interactive mode, letting you fuzzy match against playlist names, select multiple songs to add/remove, or select playlists to play/shuffle from.
 
 This only stores the relative filepath to your base music directory in each file, so you could move your music directory somewhere else and update the environment variable, and everything works, even across computers. However, filenames tend to change, and sometimes you might change the name of an artists' folder, or the name of an album to include metadata. So, `plainplay` has commands to help fix that:
 
@@ -79,9 +69,21 @@ This only stores the relative filepath to your base music directory in each file
 
 ### Scripting
 
-As an example, I use the `mpv` IPC server (see [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets)), which I use to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints a list of currently playing media, so its easily integrated into the `curplaying` command.
+Since the specification/file format is extremely simple, it integrates nicely with lots of shell tools that work on lines of text.
 
-If I want to selectively play songs from multiple playlists, I can do so using common unix tools, like:
+To add songs:
+
+`cd $HOME/Music && find 'Daft Punk' -iname '*fragments of time*.mp3' >> ~/.local/share/plaintext_playlist/electronic.txt`
+
+To remove songs:
+
+`sed -i -e '/Fragments/d' "$(plainplay playlistdir)"/electronic.txt`
+
+Playlists are played through `mpv`, by using the `--playlist` flag, reading from standard input. The equivalent command without `plainplay` would be:
+
+`cd $HOME/Music && mpv --playlist=- < "$HOME/.local/share/plaintext_playlist/electronic.txt"`
+
+If I want to selectively play songs from all my playlists, I can do so like:
 
 ```
 $ cd ~/Music
@@ -89,21 +91,35 @@ $ grep -hiE 'mario|runescape|kirby|pokemon' $(find $(plainplay playlistdir) -typ
 	| shuf | mpv --playlist=-
 ```
 
-... which would shuffle songs from my playlists which match `mario|runescape|kirby|pokemon`
+... which would shuffle songs from my playlists which have paths that match one of `mario|runescape|kirby|pokemon`
+
+Could instead use `listall` to print all the lines in playlists, then `grep` against those:
+
+```
+cd ~/Music && play listall $(plainplay playlistdir)/* | grep -i 'mario' | mpv --shuffle --playlist=-
+```
+
+---
 
 I often use this alias:
 
 `alias splayall='plainplay shuffleall "$(plainplay playlistdir)"/*'`
 
-... to shuffle all the music I have listed in playlists. If somethings in a playlist, I generally am a fan of it, but shuffling all the things in my music directory would mean I'd just be listening to soundtracks half the time.
+... to shuffle all the music I have listed in playlists.
 
-To create an archive of a playlist, can use tar like:
+---
+
+To create an archive of a playlist, (when in your top-level Music directory) can use tar like:
 
 `tar -cvf playlist_name.tar -T <(plainplay list <playlistname>)`
 
-I have a script [here](https://github.com/seanbreckenridge/vps/blob/master/playlist) which I use to combine multiple playlists into one long `mp3` file, which I then sync up to my server, so I can listen to it on my phone.
+---
 
-For `zsh` completion support, see [here](https://sean.fish/d/_plainplay).
+As some more complicated examples of what this enables me to do:
+
+I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets) scripts) to to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints a paths of the currently playing song. Whenever I'm listening to an album and I want to add a song to a playlist, I do `playlist curplaying`, it drops me into `fzf` to pick a playlist, and it adds that path to whatever I select.
+
+I have a script [here](https://github.com/seanbreckenridge/vps/blob/master/playlist) which I use to combine multiple playlists into one long `mp3` file, which I then sync up to my server, so I can listen to it on my phone.
 
 ### Configuration/Installation
 
@@ -124,6 +140,8 @@ This follows 'Progressive Enhancement' with regard to external dependencies; for
 Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_PLAYLISTS` (defaults to `~/.local/share/plaintext_playlist`).
 
 You must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory. If you don't have one place you keep all your music, you can set your `$HOME` directory, or `/`, which would cause the playlist files to use absolute paths instead. However, that would make the `resolve` function work very slowly, since it would have to search your entire system to find paths to match broken paths against.
+
+For `zsh` completion support, see [here](https://sean.fish/d/_plainplay).
 
 ### Specification
 
