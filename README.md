@@ -121,6 +121,8 @@ I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbrecken
 
 I have a script [here](https://github.com/seanbreckenridge/vps/blob/master/playlist) which I use to combine multiple playlists into one long `mp3` file, which I then sync up to my server, so I can listen to it on my phone.
 
+Another script [here](https://gist.github.com/seanbreckenridge/8ec7da1c81cf3741396b29af5f7253b7), which I use to find any albums in my music directory which don't have any songs in any of my playlists, i.e. pick a random album in my music directory I haven't listened to yet.
+
 ### Configuration/Installation
 
 To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
