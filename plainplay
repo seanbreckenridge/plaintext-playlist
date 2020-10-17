@@ -36,7 +36,6 @@ require() {
 	[[ $(command -v "$1") ]] || abort "This part of the application requires '${1}', could not find it on your \$PATH"
 }
 require realpath
-require printf
 require sed
 
 # HELP RELATED
