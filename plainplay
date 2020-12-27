@@ -200,6 +200,7 @@ parse_args() {
 
 # prompts the user with the list of commands, and lets them select one of them
 pick_command_interactive() {
+	local rawFzfChoice firstArg
 	require fzf
 	rawFzfChoice="$(commands_list | fzf -i --prompt='Run > ' --history="$PromptHistoryFile")" || abort "Error: You didn't provide a valid command."
 	# get the first argument (e.g. add|remove|playlist-list)
@@ -210,6 +211,7 @@ pick_command_interactive() {
 # returns the playlist path for a path/name if it exists.
 # If -x is provided as the second argument, exits if playlist path doesn't exist
 get_playlist_path() {
+	local fullPath
 	fullPath="$(realpath "$1")"
 	# if the full path exists
 	if [[ -e "$fullPath" ]]; then
@@ -236,6 +238,7 @@ make_sure_playlists_exist() {
 
 # presents the user with a prompt of playlists to choose from
 pick_existing_playlist() {
+	local playlistName
 	require fzf
 	make_sure_playlists_exist
 	playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ' --preview="cat \"${ConfDir}/\"{}.txt")" || abort "Error: You didn't select a valid playlist."
@@ -244,6 +247,7 @@ pick_existing_playlist() {
 
 # sets AllActivePlaylists to whatever the user selects
 pick_multiple_existing_playlists() {
+	local playlistNames
 	require fzf
 	make_sure_playlists_exist
 	playlistNames="$(list_playlists | fzf -m -i --prompt="Select multiple playlists by using 'Tab' > " --preview="cat \"${ConfDir}/\"{}.txt")" || abort "Error: You didn't select a valid playlist."
@@ -269,6 +273,7 @@ generic_input() {
 
 # uses the current directory plus passed filenames to resolve relative paths
 convert_to_playlist_filenames() {
+	local relativeFilenames absoluteFilenames
 	relativeFilenames="$(cat)"
 	# get absolute path of all of the music to be added
 	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"$relativeFilenames")"
@@ -279,6 +284,7 @@ convert_to_playlist_filenames() {
 
 # converts absolute paths to paths relative to the music dir
 remove_music_dir() {
+	local absoluteNoLinkFilename
 	# if the $MusicDir is a link, (e.g. linked to some other drive)
 	# also replace that path
 	absoluteNoLinkFilename="$(realpath "$MusicDir")"
@@ -289,7 +295,7 @@ remove_music_dir() {
 
 # checks a playlist file for broken paths
 check_playlist() {
-	local playlistToCheck ret
+	local playlistToCheck ret songFullPath
 	playlistToCheck="$1"
 	ret=0
 	printf "Checking '%s'...\n" "$playlistToCheck"
@@ -365,7 +371,7 @@ run_plaintext_playlist() {
 
 	PLAYLIST_DELETE)
 		printf "Are you sure you want to delete '%s'? [y/N] " "$ActivePlaylist"
-		read -r "response"
+		read -r response
 		if [[ $response =~ ^[Yy] ]]; then
 			rm "$ActivePlaylist"
 			printf "Deleted Playlist: '%s'\n" "$ActivePlaylist"
