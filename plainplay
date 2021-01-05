@@ -1,7 +1,7 @@
 #!/bin/bash
 # plainplay, an script to maintain plaintext playlists
 # run plainplay -h for help
-# see https://gitlab.com/seanbreckenridge/plaintext-playlist
+# see https://github.com/seanbreckenridge/plaintext-playlist
 #
 # For reference, variable styling is:
 # ENVIRONMENT_VARIABLES

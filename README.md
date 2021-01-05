@@ -128,7 +128,7 @@ Another script [here](https://gist.github.com/seanbreckenridge/8ec7da1c81cf37413
 To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
 
 ```sh
-git clone https://gitlab.com/seanbreckenridge/plaintext-playlist
+git clone https://github.com/seanbreckenridge/plaintext-playlist
 cd plaintext-playlist
 cp plainplay resolve_cmd_plainplay ~/.local/bin
 ```
