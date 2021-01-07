@@ -20,7 +20,7 @@ declare ActivePlaylist=
 # used for shuffleall/playall
 declare -a AllActivePlaylists=()
 
-readonly PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-$HOME/.cache}}/plaintext_playlist_history.txt"
+readonly PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-${HOME}/.cache}}/plaintext_playlist_history.txt"
 
 # set default fzf command
 export FZF_DEFAULT_COMMAND="find -type f | sort"
@@ -33,7 +33,7 @@ abort() {
 
 # require that a executable be installed
 require() {
-	[[ $(command -v "$1") ]] || abort "This part of the application requires '${1}', could not find it on your \$PATH"
+	[[ $(command -v "$1") ]] || abort "This part of the application requires '$1', could not find it on your \$PATH"
 }
 require realpath
 require sed
@@ -120,9 +120,9 @@ application_setup() {
 	MusicDir="${PLAINTEXT_PLAYLIST_MUSIC_DIR?:'ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your root music folder) is not set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay.'}"
 	[[ -d "$MusicDir" ]] || abort "Error: ${PLAINTEXT_PLAYLIST_MUSIC_DIR} doesn't exist.\nThat should be the main, top-level folder where you keep your music locally."
 	# create playlist dir if it doesn't exist.
-	if [[ ! -d "$ConfDir" ]]; then
+	if [[ ! -d "${ConfDir}" ]]; then
 		printf "Creating playlist directory at '%s'\n" "$ConfDir"
-		mkdir -p "$ConfDir" || exit 1
+		mkdir -p "${ConfDir}" || exit 1
 	fi
 }
 
@@ -202,7 +202,7 @@ parse_args() {
 pick_command_interactive() {
 	local rawFzfChoice firstArg
 	require fzf
-	rawFzfChoice="$(commands_list | fzf -i --prompt='Run > ' --history="$PromptHistoryFile")" || abort "Error: You didn't provide a valid command."
+	rawFzfChoice="$(commands_list | fzf -i --prompt='Run > ' --history="${PromptHistoryFile}")" || abort "Error: You didn't provide a valid command."
 	# get the first argument (e.g. add|remove|playlist-list)
 	firstArg=("${rawFzfChoice%% *| *}")
 	parse_args "${firstArg[@]}"
@@ -214,19 +214,19 @@ get_playlist_path() {
 	local fullPath
 	fullPath="$(realpath "$1")"
 	# if the full path exists
-	if [[ -e "$fullPath" ]]; then
-		echo -e "$fullPath"
+	if [[ -e "${fullPath}" ]]; then
+		echo -e "${fullPath}"
 	# else if the file is just a name (e.g. rock{,.txt} for $ConfDir/rock.txt)
 	else
 		fullPath="${ConfDir}/${1%.txt}.txt"
-		if [[ -f "$fullPath" ]]; then
-			echo -e "$fullPath"
+		if [[ -f "${fullPath}" ]]; then
+			echo -e "${fullPath}"
 		else
 			# if not told to exit, prints the path, even though the path may not exist
 			if [[ "$2" = "-x" ]]; then
 				abort "Error: Could not find a matching playlist for: ${1}"
 			else
-				echo -e "$fullPath"
+				echo -e "${fullPath}"
 			fi
 		fi
 	fi
@@ -242,7 +242,7 @@ pick_existing_playlist() {
 	require fzf
 	make_sure_playlists_exist
 	playlistName="$(list_playlists | fzf -i --prompt='Select a playlist > ' --preview="cat \"${ConfDir}/\"{}.txt")" || abort "Error: You didn't select a valid playlist."
-	echo -e "$playlistName"
+	echo -e "${playlistName}"
 }
 
 # sets AllActivePlaylists to whatever the user selects
@@ -251,24 +251,24 @@ pick_multiple_existing_playlists() {
 	require fzf
 	make_sure_playlists_exist
 	playlistNames="$(list_playlists | fzf -m -i --prompt="Select multiple playlists by using 'Tab' > " --preview="cat \"${ConfDir}/\"{}.txt")" || abort "Error: You didn't select a valid playlist."
-	readarray -t <<<"$playlistNames"
+	readarray -t <<<"${playlistNames}"
 	AllActivePlaylists=("${MAPFILE[@]}")
 }
 
 # lists the names of the playlists (without .txt)
 list_playlists() {
-	command ls -1 "$ConfDir" | grep -i ".txt$" | sed -e "s/\.txt//g"
+	command ls -1 "${ConfDir}" | grep -i ".txt$" | sed -e "s/\.txt//g"
 }
 
 # returns the number of playlists
 playlist_count() {
-	command ls -1 "$ConfDir" | wc -l
+	command ls -1 "${ConfDir}" | wc -l
 }
 
 # ask the user for some input, hit enter to continue. "$1" is the prompt string
 generic_input() {
-	read -e -p "$1" -r "reply"
-	echo -e "$reply"
+	read -e -p "$1" -r reply
+	printf '%s\n' "${reply}"
 }
 
 # uses the current directory plus passed filenames to resolve relative paths
@@ -276,10 +276,10 @@ convert_to_playlist_filenames() {
 	local relativeFilenames absoluteFilenames
 	relativeFilenames="$(cat)"
 	# get absolute path of all of the music to be added
-	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"$relativeFilenames")"
+	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"${relativeFilenames}")"
 	# make sure user gave data
-	[[ -z "$absoluteFilenames" ]] && abort "Did not receive any filenames to add"
-	echo -e "$absoluteFilenames" | remove_music_dir
+	[[ -z "${absoluteFilenames}" ]] && abort "Did not receive any filenames to add"
+	echo -e "${absoluteFilenames}" | remove_music_dir
 }
 
 # converts absolute paths to paths relative to the music dir
@@ -287,7 +287,7 @@ remove_music_dir() {
 	local absoluteNoLinkFilename
 	# if the $MusicDir is a link, (e.g. linked to some other drive)
 	# also replace that path
-	absoluteNoLinkFilename="$(realpath "$MusicDir")"
+	absoluteNoLinkFilename="$(realpath "${MusicDir}")"
 	# convert to relative filenames:
 	# (receives input from STDIN)
 	sed -e "s|^${MusicDir%/}/||" -e "s|^${absoluteNoLinkFilename%/}/||"
@@ -298,15 +298,15 @@ check_playlist() {
 	local playlistToCheck ret songFullPath
 	playlistToCheck="$1"
 	ret=0
-	printf "Checking '%s'...\n" "$playlistToCheck"
+	printf "Checking '%s'...\n" "${playlistToCheck}"
 	while read -r song; do
 		songFullPath="${MusicDir%/}/${song}"
-		[[ -e "$songFullPath" ]] || {
+		[[ -e "${songFullPath}" ]] || {
 			ret=1
-			printf "Error: '%s' doesn't exist\n" "$songFullPath" 1>&2
+			printf "Error: '%s' doesn't exist\n" "${songFullPath}" 1>&2
 		}
-	done <"$playlistToCheck"
-	return "$ret"
+	done <"${playlistToCheck}"
+	return "${ret}"
 }
 
 # safely concatenates the files in AllActivePlaylists, prints the result to STDOUT
@@ -315,7 +315,7 @@ check_playlist() {
 safe_concat() {
 	{
 		for pfile in "${AllActivePlaylists[@]}"; do
-			cat "$pfile"
+			cat "${pfile}"
 			echo
 		done
 	} | sed -e "/^\s*$/d"
@@ -327,26 +327,26 @@ run_plaintext_playlist() {
 	# Prompt user if necessary
 	case "$Action" in
 	ADD | CURPLAYING | REMOVE | LIST | UNIQUE | EXIF | PLAY | SHUFFLE | PLAYLIST_DELETE)
-		if [[ -z "$ActivePlaylist" ]]; then
+		if [[ -z "${ActivePlaylist}" ]]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
-		ActivePlaylist="$(get_playlist_path "$ActivePlaylist" -x)" || exit 1
+		ActivePlaylist="$(get_playlist_path "${ActivePlaylist}" -x)" || exit 1
 		;;
 	PLAYALL | SHUFFLEALL | LISTALL | M3U)
 		# if no playlist at all was selected
-		if [[ -z "$ActivePlaylist" ]]; then
+		if [[ -z "${ActivePlaylist}" ]]; then
 			pick_multiple_existing_playlists || exit 1
 		fi
 		# convert each item in the array to a path
 		local tempResult=()
 		for plist in "${AllActivePlaylists[@]}"; do
-			tempResult+=("$(get_playlist_path "$plist" -x)") || exit 1
+			tempResult+=("$(get_playlist_path "${plist}" -x)") || exit 1
 		done
 		AllActivePlaylists=("${tempResult[@]}")
 		;;
 
 	PLAYLIST_CREATE)
-		if [[ -z "$ActivePlaylist" ]]; then
+		if [[ -z "${ActivePlaylist}" ]]; then
 			ActivePlaylist="$(get_playlist_path "$(generic_input 'Name of new playlist: ')")" || exit 1
 		fi
 		;;
@@ -358,23 +358,23 @@ run_plaintext_playlist() {
 	# Run, based on Action
 	case "$Action" in
 	PLAYLIST_CREATE)
-		if [[ -f "$ActivePlaylist" ]]; then
-			printf "Warning: Playlist '%s' already exists.\n" "$ActivePlaylist" 1>&2
+		if [[ -f "${ActivePlaylist}" ]]; then
+			printf "Warning: Playlist '%s' already exists.\n" "${ActivePlaylist}" 1>&2
 		else
-			touch "$ActivePlaylist"
-			printf "Created Playlist: '%s'\n" "$ActivePlaylist"
+			touch "${ActivePlaylist}"
+			printf "Created Playlist: '%s'\n" "${ActivePlaylist}"
 		fi
 		;;
 	PLAYLIST_LIST)
-		find "$ConfDir" -type f -iname "*.txt"
+		find "${ConfDir}" -type f -iname "*.txt"
 		;;
 
 	PLAYLIST_DELETE)
-		printf "Are you sure you want to delete '%s'? [y/N] " "$ActivePlaylist"
+		printf "Are you sure you want to delete '%s'? [y/N] " "${ActivePlaylist}"
 		read -r response
 		if [[ $response =~ ^[Yy] ]]; then
-			rm "$ActivePlaylist"
-			printf "Deleted Playlist: '%s'\n" "$ActivePlaylist"
+			rm "${ActivePlaylist}"
+			printf "Deleted Playlist: '%s'\n" "${ActivePlaylist}"
 		fi
 		;;
 	PLAYLISTDIR)
@@ -383,29 +383,29 @@ run_plaintext_playlist() {
 	CHECK)
 		ret=0
 		while IFS= read -r -d '' playlistToCheck; do
-			check_playlist "$playlistToCheck" || ret=1
+			check_playlist "${playlistToCheck}" || ret=1
 		done < <(find "${ConfDir}" -type f -iname "*.txt" -print0)
-		exit "$ret"
+		exit "${ret}"
 		;;
 	RESOLVE)
 		require resolve_cmd_plainplay
 		require python3
-		resolve_cmd_plainplay "$ConfDir" "$MusicDir" "$ResolveAutoConfirm"
+		resolve_cmd_plainplay "${ConfDir}" "${MusicDir}" "${ResolveAutoConfirm}"
 		;;
 	ADD)
-		case "$ReadInputType" in
+		case "${ReadInputType}" in
 		FROM_STDIN)
 			filenamesToAdd="$(cat)"
-			echo -e "$filenamesToAdd" >>"$ActivePlaylist"
+			echo -e "${filenamesToAdd}" >>"${ActivePlaylist}"
 			;;
 
 		MULTI_SELECT_FZF)
 			require fzf
 			songsToAdd="$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > ")" || abort "Error: You didn't provide any songs to add..."
-			fixedFilenames="$(convert_to_playlist_filenames <<<"$songsToAdd")"
+			fixedFilenames="$(convert_to_playlist_filenames <<<"${songsToAdd}")"
 			echo -e "Adding the following to ${ActivePlaylist}:"
-			echo -e "$fixedFilenames"
-			echo -e "$fixedFilenames" >>"$ActivePlaylist"
+			echo -e "${fixedFilenames}"
+			echo -e "${fixedFilenames}" >>"${ActivePlaylist}"
 			;;
 		*)
 			abort "Unrecognized selection type. Expected FROM_STDIN or MULTI_SELECT_FZF"
@@ -417,62 +417,62 @@ run_plaintext_playlist() {
 		require mpv-currently-playing
 		# get currently playing songs, limit to items which arent paused
 		curPlayingSongs="$(mpv-currently-playing 2>/dev/null)"
-		curPlayingSongsCount="$(wc -l <<<"$curPlayingSongs")"
-		[[ -z "$curPlayingSongs" ]] && abort "Did not receieve any paths from active mpv instances"
+		curPlayingSongsCount="$(wc -l <<<"${curPlayingSongs}")"
+		[[ -z "${curPlayingSongs}" ]] && abort "Did not receieve any paths from active mpv instances"
 		# if theres only one playing, select that, else fzf to select one of the playing songs
 		if ((curPlayingSongsCount == 1)); then
 			chosenSong="${curPlayingSongs}"
 		else
 			require fzf
-			chosenSong="$(fzf -m -i --prompt="Select which currently playing song to add > " <<<"$curPlayingSongs")" || abort "You didn't select one of the songs"
+			chosenSong="$(fzf -m -i --prompt="Select which currently playing song to add > " <<<"${curPlayingSongs}")" || abort "You didn't select one of the songs"
 		fi
-		relativeFileName="$(remove_music_dir <<<"$chosenSong")"
+		relativeFileName="$(remove_music_dir <<<"${chosenSong}")"
 		echo -e "Adding currently playing song to ${ActivePlaylist}"
-		echo -e "$relativeFileName"
-		echo -e "$relativeFileName" >>"$ActivePlaylist"
+		echo -e "${relativeFileName}"
+		echo -e "${relativeFileName}" >>"${ActivePlaylist}"
 		;;
 	REMOVE)
 		require fzf
-		linesToRemove="$(fzf -m -i --prompt="Select songs to remove. Hit 'Tab' to select multiple > " <"$ActivePlaylist")" || abort "Error: you didn't provide any songs to remove..."
-		filteredSongs="$(grep -Fxv "$linesToRemove" <"$ActivePlaylist")"
-		echo -e "$filteredSongs" >"$ActivePlaylist"
+		linesToRemove="$(fzf -m -i --prompt="Select songs to remove. Hit 'Tab' to select multiple > " <"${ActivePlaylist}")" || abort "Error: you didn't provide any songs to remove..."
+		filteredSongs="$(grep -Fxv "${linesToRemove}" <"${ActivePlaylist}")"
+		echo -e "${filteredSongs}" >"${ActivePlaylist}"
 		echo -e "Removed the following from ${ActivePlaylist}:"
-		echo -e "$linesToRemove"
+		echo -e "${linesToRemove}"
 		;;
 	LIST)
-		cat "$ActivePlaylist"
+		cat "${ActivePlaylist}"
 		;;
 	LISTALL)
-		cd "$MusicDir" && safe_concat
+		cd "${MusicDir}" && safe_concat
 		;;
 	M3U)
 		require jq
 		require ffprobe
 		local -a filepaths=()
 		while read -r song; do
-			if [[ "$PlaylistPathsMode" == 'ABSOLUTE' ]]; then
+			if [[ "${PlaylistPathsMode}" == 'ABSOLUTE' ]]; then
 				filepaths+=("${MusicDir%/}/${song}")
 			else
 				filepaths+=("${song}")
 			fi
-		done < <(cd "$MusicDir" && safe_concat)
+		done < <(cd "${MusicDir}" && safe_concat)
 		printf '#EXTM3U\n'
 		for fp in "${filepaths[@]}"; do
-			metadataJson="$(cd "$MusicDir" && ffprobe -v quiet -print_format json -show_format "$fp")" || {
+			metadataJson="$(cd "$MusicDir" && ffprobe -v quiet -print_format json -show_format "${fp}")" || {
 				echo -e "ffprobe failed for ${fp}" 1>&2
 				continue
 			}
-			durationFloat="$(jq -r '.format.duration' <<<"$metadataJson")"
+			durationFloat="$(jq -r '.format.duration' <<<"${metadataJson}")"
 			durationInt="${durationFloat%%.*}"
-			artistName="$(jq -r '.format.tags.artist' <<<"$metadataJson")"
-			trackName="$(jq -r '.format.tags.title' <<<"$metadataJson")"
+			artistName="$(jq -r '.format.tags.artist' <<<"${metadataJson}")"
+			trackName="$(jq -r '.format.tags.title' <<<"${metadataJson}")"
 			printf '#EXTINF:%d' "${durationInt}"
 			# if we got both a artist and track name, include that in the metadata
-			if [[ "$artistName" == 'null' || "$trackName" == 'null' ]]; then
+			if [[ "${artistName}" == 'null' || "${trackName}" == 'null' ]]; then
 				# no additional metadata, just print a newline
 				printf '\n'
 			else
-				printf ',%s - %s\n' "$artistName" "$trackName"
+				printf ',%s - %s\n' "${artistName}" "${trackName}"
 			fi
 			printf '%s\n' "${fp}"
 		done
@@ -480,34 +480,34 @@ run_plaintext_playlist() {
 	UNIQUE)
 		require uniq
 		filteredPlaylistFile='/tmp/filtered_playlist'
-		beforeCount="$(wc -l <"$ActivePlaylist")"
-		cat -n "$ActivePlaylist" | sort -uk2 | sort -nk1 | cut -f2- >"$filteredPlaylistFile"
-		mv "$filteredPlaylistFile" "$ActivePlaylist"
-		printf "Filtered '%s' to unique lines. (%d before, %d now)\n" "$ActivePlaylist" "$beforeCount" "$(wc -l <"$ActivePlaylist")"
+		beforeCount="$(wc -l <"${ActivePlaylist}")"
+		cat -n "${ActivePlaylist}" | sort -uk2 | sort -nk1 | cut -f2- >"${filteredPlaylistFile}"
+		mv "${filteredPlaylistFile}" "${ActivePlaylist}"
+		printf "Filtered '%s' to unique lines. (%d before, %d now)\n" "${ActivePlaylist}" "${beforeCount}" "$(wc -l <"${ActivePlaylist}")"
 		;;
 	EXIF)
 		require exiftool
-		filepath="$(cd "$MusicDir" && fzf +m -i --prompt="Print exiftool for > " --preview="cd \"$MusicDir\" && exiftool {}" <"$ActivePlaylist")" || abort "No filepath selected to print exif data for."
-		cd "$MusicDir" && exiftool "$filepath"
+		filepath="$(cd "${MusicDir}" && fzf +m -i --prompt="Print exiftool for > " --preview="cd \"${MusicDir}\" && exiftool {}" <"${ActivePlaylist}")" || abort "No filepath selected to print exif data for."
+		cd "${MusicDir}" && exiftool "${filepath}"
 		;;
 	PLAY)
 		require mpv
-		cd "$MusicDir" && mpv --playlist=- --no-audio-display <"$ActivePlaylist"
+		cd "${MusicDir}" && mpv --playlist=- --no-audio-display <"${ActivePlaylist}"
 		;;
 
 	PLAYALL)
 		require mpv
-		cd "$MusicDir" && safe_concat | mpv --playlist=- --no-audio-display
+		cd "${MusicDir}" && safe_concat | mpv --playlist=- --no-audio-display
 		;;
 
 	SHUFFLE)
 		require mpv
-		cd "$MusicDir" && mpv --shuffle --playlist=- --no-audio-display <"$ActivePlaylist"
+		cd "${MusicDir}" && mpv --shuffle --playlist=- --no-audio-display <"${ActivePlaylist}"
 		;;
 
 	SHUFFLEALL)
 		require mpv
-		cd "$MusicDir" && safe_concat | mpv --playlist=- --shuffle --no-audio-display
+		cd "${MusicDir}" && safe_concat | mpv --playlist=- --shuffle --no-audio-display
 		;;
 
 	*)
@@ -520,4 +520,4 @@ run_plaintext_playlist() {
 check_for_help "$@"
 application_setup
 parse_args "$@"
-run_plaintext_playlist "$Action" "$ActivePlaylist" || exit 1
+run_plaintext_playlist "${Action}" "${ActivePlaylist}" || exit 1

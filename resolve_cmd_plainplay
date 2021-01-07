@@ -35,6 +35,7 @@ def get_music_dir_files():
     If it hasnt already been indexed, get absolute paths
     for each item in 'music_directory'
     """
+    assert music_dir is not None
     global all_filepaths
     if all_filepaths is None:
         print("Scanning '{}' for filepaths to compare files against".format(music_dir))
@@ -50,6 +51,7 @@ def check_playlist(playlist_file: str) -> List[Tuple[int, str]]:
     Checks a playlist file for broken files, returns a list
     of them if any exist.
     """
+    assert music_dir is not None
     print("Checking '{}'...".format(playlist_file))
     broken_songpaths: List[Tuple[int, str]] = []
     songs = read_playlist_file(playlist_file)
@@ -87,6 +89,7 @@ def replace_fixed_filepaths_and_write(replacements: Dict[int, str], filename: st
     Replaces items that have been resolved, writes back to the playlist file
     if there are changes
     """
+    assert music_dir is not None
     if len(replacements.keys()):
         playlist_lines = read_playlist_file(filename)
         for lineno, replace_with in replacements.items():
