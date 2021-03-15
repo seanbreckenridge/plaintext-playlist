@@ -78,7 +78,7 @@ Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
   (cd to your Music dir and use find for good results)
 
   e.g.: find somedirectory -name "*.flac" | plainplay - add rock
-  
+
   --auto-confirm can be passed with 'resolve' to automatically
   use the closest match instead of prompting you to choose
   one of the closest matching files to fix broken filepaths

@@ -12,7 +12,7 @@ Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
   (cd to your Music dir and use find for good results)
 
   e.g.: find somedirectory -name "*.flac" | plainplay - add rock
-  
+
   --auto-confirm can be passed with 'resolve' to automatically
   use the closest match instead of prompting you to choose
   one of the closest matching files to fix broken filepaths
@@ -128,7 +128,6 @@ alias 'playrg-=cm; playrg-_f'
 alias cdpl='cd "${PLAINTEXT_PLAYLIST_PLAYLISTS}"'
 alias playfzf='cm; rg --color never --with-filename --no-heading "" "${PLAINTEXT_PLAYLIST_PLAYLISTS}/"*.txt | sed -e "s|^${PLAINTEXT_PLAYLIST_PLAYLISTS}/||" | fzf'
 alias 'playfzf-=playfzf | cut -d":" -f2- | mpv-from-stdin'
-
 ```
 
 ---

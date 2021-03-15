@@ -12,7 +12,7 @@ Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
   (cd to your Music dir and use find for good results)
 
   e.g.: find somedirectory -name "*.flac" | plainplay - add rock
-  
+
   --auto-confirm can be passed with 'resolve' to automatically
   use the closest match instead of prompting you to choose
   one of the closest matching files to fix broken filepaths
@@ -108,7 +108,7 @@ I have lots of aliases I use to selectively play songs from my playlists:
 ```
 >>>PMARK
 perl -E 'print "`"x3, "\n"'
-curl -sL 'https://sean.fish/d/other_aliases' | awk '/seanbreckenridge\/plaintext-playlist\.git/,/^\s*$/'
+curl -sL 'https://sean.fish/d/other_aliases' | awk '/seanbreckenridge\/plaintext-playlist\.git/,/^\s*$/' | sed -E -e '/^s*$/d'
 perl -E 'print "`"x3, "\n"'
 ```
 
