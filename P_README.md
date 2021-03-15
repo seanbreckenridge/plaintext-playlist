@@ -106,29 +106,10 @@ Additionally, since this is just lines of text, you're free to turn the `playlis
 I have lots of aliases I use to selectively play songs from my playlists:
 
 ```
-# https://github.com/seanbreckenridge/plaintext-playlist.git
-alias mpv-from-stdin='mpv --playlist=- --no-audio-display'
-alias cm='cd "${PLAINTEXT_PLAYLIST_MUSIC_DIR}"'
-alias play='plainplay'
-alias pplay='plainplay play'
-alias splay='plainplay shuffle'
-alias splayall='fd . "$PLAINTEXT_PLAYLIST_PLAYLISTS" -X plainplay shuffleall'
-playrg_f() {
-	cm
-	fd . "$(plainplay playlistdir)" --type file -X cat | rg -i "$*"
-}
-# play all paths that match whatever I pass as positional arguments
-playrg-_f() {
-	cm
-	playrg_f "$*" | mpv-from-stdin
-}
-# use aliases so that the 'cd' actually changes directory in the shell
-alias playrg='cm; playrg_f'
-alias 'playrg-=cm; playrg-_f'
-alias cdpl='cd "${PLAINTEXT_PLAYLIST_PLAYLISTS}"'
-alias playfzf='cm; rg --color never --with-filename --no-heading "" "${PLAINTEXT_PLAYLIST_PLAYLISTS}/"*.txt | sed -e "s|^${PLAINTEXT_PLAYLIST_PLAYLISTS}/||" | fzf'
-alias 'playfzf-=playfzf | cut -d":" -f2- | mpv-from-stdin'
-
+>>>PMARK
+perl -E 'print "`"x3, "\n"'
+curl -sL 'https://sean.fish/d/other_aliases' | awk '/seanbreckenridge\/plaintext-playlist\.git/,/^\s*$/'
+perl -E 'print "`"x3, "\n"'
 ```
 
 ---
