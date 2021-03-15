@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # plainplay, an script to maintain plaintext playlists
 # run plainplay -h for help
 # see https://github.com/seanbreckenridge/plaintext-playlist
