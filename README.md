@@ -108,6 +108,7 @@ I have lots of aliases I use to selectively play songs from my playlists:
 ```
 alias mpv-from-stdin='mpv --playlist=- --no-audio-display'
 alias cm='cd "${PLAINTEXT_PLAYLIST_MUSIC_DIR}"'
+alias cdpl='cd "${PLAINTEXT_PLAYLIST_PLAYLISTS}"'
 alias play='plainplay'
 alias pplay='plainplay play'
 alias splay='plainplay shuffle'
@@ -124,7 +125,6 @@ playrg-_f() {
 # use aliases so that the 'cd' actually changes directory in the shell
 alias playrg='cm; playrg_f'
 alias 'playrg-=cm; playrg-_f'
-alias cdpl='cd "${PLAINTEXT_PLAYLIST_PLAYLISTS}"'
 alias playfzf='cm; rg --color never --with-filename --no-heading "" "${PLAINTEXT_PLAYLIST_PLAYLISTS}/"*.txt | sed -e "s|^${PLAINTEXT_PLAYLIST_PLAYLISTS}/||" | fzf'
 alias 'playfzf-=playfzf | cut -d":" -f2- | mpv-from-stdin'
 ```
