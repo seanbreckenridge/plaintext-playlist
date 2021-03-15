@@ -108,7 +108,7 @@ I have lots of aliases I use to selectively play songs from my playlists:
 ```
 >>>PMARK
 perl -E 'print "`"x3, "\n"'
-curl -sL 'https://sean.fish/d/other_aliases' | awk '/seanbreckenridge\/plaintext-playlist\.git/,/^\s*$/' | sed -E -e '/^s*$/d'
+curl -sL 'https://sean.fish/d/other_aliases' | awk '/seanbreckenridge\/plaintext-playlist\.git/,/^\s*$/' | sed -E -e '/^s*$/d' -e '1d'
 perl -E 'print "`"x3, "\n"'
 ```
 

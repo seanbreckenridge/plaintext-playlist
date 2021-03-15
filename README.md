@@ -106,7 +106,6 @@ Additionally, since this is just lines of text, you're free to turn the `playlis
 I have lots of aliases I use to selectively play songs from my playlists:
 
 ```
-# https://github.com/seanbreckenridge/plaintext-playlist.git
 alias mpv-from-stdin='mpv --playlist=- --no-audio-display'
 alias cm='cd "${PLAINTEXT_PLAYLIST_MUSIC_DIR}"'
 alias play='plainplay'
