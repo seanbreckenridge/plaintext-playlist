@@ -203,7 +203,7 @@ parse_args() {
 pick_command_interactive() {
 	local rawFzfChoice firstArg
 	require fzf
-	rawFzfChoice="$(commands_list | fzf -i --prompt='Run > ' --history="${PromptHistoryFile}")" || abort "Error: You didn't provide a valid command."
+	rawFzfChoice="$(commands_list | fzf -i --prompt='Run > ' --history="${PromptHistoryFile}")" || abort "Error: You didn't provide a valid command"
 	# get the first argument (e.g. add|remove|playlist-list)
 	firstArg=("${rawFzfChoice%% *| *}")
 	parse_args "${firstArg[@]}"
@@ -402,7 +402,7 @@ run_plaintext_playlist() {
 
 		MULTI_SELECT_FZF)
 			require fzf
-			songsToAdd="$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > ")" || abort "Error: You didn't provide any songs to add..."
+			songsToAdd="$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > ")" || abort "Error: You didn't provide any songs to add"
 			fixedFilenames="$(convert_to_playlist_filenames <<<"${songsToAdd}")"
 			echo -e "Adding the following to ${ActivePlaylist}:"
 			echo -e "${fixedFilenames}"
