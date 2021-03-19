@@ -37,6 +37,7 @@ play [playlist]               | Play songs from a playlist
 playall [playlist]...         | Play songs from multiple playlists
 shuffle [playlist]            | Shuffle songs from a playlist
 shuffleall [playlist]...      | Shuffle songs from multiple playlists
+single [playlist]             | Play a single song from a playlist
 list [playlist]               | List songs in a playlist
 listall [playlist]...         | List songs from multiple playlists
 unique [playlist]             | Reduce a playlist to unique songs

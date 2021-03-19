@@ -1,53 +1,10 @@
 # plaintext-playlist
 
 ```
-Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
-
-  An interactive terminal playlist manager; stores playlists as text files
-  run without a COMMAND to drop into interactive mode
-
-  A hyphen (-) can be passed with add to instead
-	receive filenames from stdin. expects filenames to
-	be in the correct format
-  (cd to your Music dir and use find for good results)
-
-  e.g.: find somedirectory -name "*.flac" | plainplay - add rock
-
-  --auto-confirm can be passed with 'resolve' to automatically
-  use the closest match instead of prompting you to choose
-  one of the closest matching files to fix broken filepaths
-
-  --abs can be passed with 'm3u' to use absolute
-  paths for the generated m3u file, instead of paths
-  relative to your Music directory
-
-  e.g. plainplay --abs m3u rock
-
-  [playlist] specifies either the
-  name (without the location/.txt extension)
-  or the location of one of the playlists
-
-  curplaying using my mpv-currently-playing script at
-  https://github.com/seanbreckenridge/mpv-sockets
-
-add [playlist]                | Adds one or more songs to a playlist
-curplaying [playlist]         | Adds a currently playing mpv song to a playlist
-remove [playlist]             | Removes one of more songs from a playlist
-play [playlist]               | Play songs from a playlist
-playall [playlist]...         | Play songs from multiple playlists
-shuffle [playlist]            | Shuffle songs from a playlist
-shuffleall [playlist]...      | Shuffle songs from multiple playlists
-list [playlist]               | List songs in a playlist
-listall [playlist]...         | List songs from multiple playlists
-unique [playlist]             | Reduce a playlist to unique songs
-exif [playlist]               | Displays exif data for items in a playlist
-m3u [playlist]...             | Create a m3u playlist file from multiple playlists
-playlist-create [playlist]    | Creates a new playlist - a playlist file
-playlist-delete [playlist]    | Delete an existing playlist - a playlist file
-playlist-list                 | List the full paths of each of your playlist files
-playlistdir                   | Print the location of the playlist directory
-check                         | Makes sure that all songs in all your playlists exist
-resolve                       | Attempts to fix broken paths in playlists
+>>>PMARK
+perl -E 'print "`"x3, "\n"'
+./plainplay -h
+perl -E 'print "`"x3, "\n"'
 ```
 
 ### [Demo Video](https://sean.fish/p/plainplay_demo.mp4)

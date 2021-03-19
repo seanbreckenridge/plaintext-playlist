@@ -50,6 +50,7 @@ play [playlist]               | Play songs from a playlist
 playall [playlist]...         | Play songs from multiple playlists
 shuffle [playlist]            | Shuffle songs from a playlist
 shuffleall [playlist]...      | Shuffle songs from multiple playlists
+single [playlist]             | Play a single song from a playlist
 list [playlist]               | List songs in a playlist
 listall [playlist]...         | List songs from multiple playlists
 unique [playlist]             | Reduce a playlist to unique songs
@@ -151,7 +152,7 @@ parse_args() {
 			;;
 
 		# command that optionally accept one playlist
-		add | curplaying | remove | list | play | shuffle | unique | exif | playlist-create | playlist-delete)
+		add | curplaying | remove | list | play | shuffle | single | unique | exif | playlist-create | playlist-delete)
 			Action="$(parse_command "$1")"
 			ActivePlaylist="$2" # get playlist name
 			shift               # shift command name off args, playlist name gets shifted off at the bottom of the while loop
@@ -326,7 +327,7 @@ run_plaintext_playlist() {
 	# Validate Playlist based on given arguments
 	# Prompt user if necessary
 	case "$Action" in
-	ADD | CURPLAYING | REMOVE | LIST | UNIQUE | EXIF | PLAY | SHUFFLE | PLAYLIST_DELETE)
+	ADD | CURPLAYING | REMOVE | LIST | UNIQUE | EXIF | PLAY | SHUFFLE | SINGLE | PLAYLIST_DELETE)
 		if [[ -z "${ActivePlaylist}" ]]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
@@ -508,6 +509,16 @@ run_plaintext_playlist() {
 	SHUFFLEALL)
 		require mpv
 		cd "${MusicDir}" && safe_concat | mpv --playlist=- --shuffle --no-audio-display
+		;;
+
+	SINGLE)
+		require mpv
+		require fzf
+		if chosenSong="$(fzf -i --prompt='Select a song to play > ' <"${ActivePlaylist}")"; then
+			cd "${MusicDir}" && mpv --playlist=- --no-audio-display <<<"${chosenSong}"
+		else
+			printf "Error: Didn't receive single to play\n" >&2
+		fi
 		;;
 
 	*)
