@@ -107,7 +107,8 @@ Additionally, since this is just lines of text, you're free to turn the `playlis
 I have lots of aliases I use to selectively play songs from my playlists:
 
 ```
-alias mpv-from-stdin='mpv --playlist=- --no-audio-display'
+# --msg-level=file=error removes the 'reading from stdin...' info message
+alias mpv-from-stdin='mpv --playlist=- --no-audio-display --msg-level=file=error'
 alias cm='cd "${PLAINTEXT_PLAYLIST_MUSIC_DIR}"'
 alias cdpl='cd "${PLAINTEXT_PLAYLIST_PLAYLISTS}"'
 alias play='plainplay'
