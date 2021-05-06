@@ -56,7 +56,9 @@ Could instead use `listall` to print all the lines in playlists, then `grep` aga
 cd ~/Music && play listall $(plainplay playlistdir)/* | grep -i 'mario' | mpv --shuffle --playlist=-
 ```
 
-Additionally, since this is just lines of text, you're free to turn the `playlistdir` into a git-tracked directory.
+Additionally, since this is just lines of text, you're free to turn the `playlistdir` into a git-tracked directory; which I push to a private git repo just so its backed it periodically:
+
+![](https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/.github/playlists_git.png)
 
 ---
 
