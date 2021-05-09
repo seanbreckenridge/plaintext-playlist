@@ -480,7 +480,8 @@ run_plaintext_playlist() {
 		;;
 	UNIQUE)
 		require uniq
-		filteredPlaylistFile='/tmp/filtered_playlist'
+		require mktemp
+		filteredPlaylistFile="$(mktemp)"
 		beforeCount="$(wc -l <"${ActivePlaylist}")"
 		cat -n "${ActivePlaylist}" | sort -uk2 | sort -nk1 | cut -f2- >"${filteredPlaylistFile}"
 		mv "${filteredPlaylistFile}" "${ActivePlaylist}"
