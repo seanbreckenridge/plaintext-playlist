@@ -25,9 +25,13 @@ readonly PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-${HO
 # set default fzf command
 export FZF_DEFAULT_COMMAND="find -type f | sort"
 
+eprintf () {
+	printf "$@" 1>&2
+}
+
 # error helper
 abort() {
-	printf '%s\n' "$1" 1>&2
+	eprintf '%s\n' "$1"
 	exit 1
 }
 
@@ -117,9 +121,14 @@ application_setup() {
 	# PLAINTEXT_PLAYLIST_PLAYLISTS can be set by the user to override,
 	# else respect XDG, else put config in ~/.local/share/plaintext_playlist
 	ConfDir="${PLAINTEXT_PLAYLIST_PLAYLISTS:=${XDG_DATA_HOME:-$HOME/.local/share}/plaintext_playlist}"
-	# error if user hasn't set music dir
-	MusicDir="${PLAINTEXT_PLAYLIST_MUSIC_DIR?:'ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your root music folder) is not set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay.'}"
-	[[ -d "$MusicDir" ]] || abort "Error: ${PLAINTEXT_PLAYLIST_MUSIC_DIR} doesn't exist.\nThat should be the main, top-level folder where you keep your music locally."
+	# if user hasn't set music dir, try $XDG_MUSIC_DIR
+	if [[ -z "${PLAINTEXT_PLAYLIST_MUSIC_DIR}" && -n "${XDG_MUSIC_DIR}" ]]; then
+		eprintf 'Warning: PLAINTEXT_PLAYLIST_MUSIC_DIR is not set. Defaulting to XDG_MUSIC_DIR...\n'
+		MusicDir="${XDG_MUSIC_DIR}"
+	else
+		MusicDir="${PLAINTEXT_PLAYLIST_MUSIC_DIR?:'ERROR PLAINTEXT_PLAYLIST_MUSIC_DIR (your root music folder) is not set as an environment variable. e.g.: PLAINTEXT_PLAYLIST_MUSIC_DIR=~/Music plainplay.'}"
+	fi
+	[[ -e "$MusicDir" ]] || abort "Error: ${PLAINTEXT_PLAYLIST_MUSIC_DIR} doesn't exist.\nThat should be the main, top-level folder where you keep your music locally."
 	# create playlist dir if it doesn't exist.
 	if [[ ! -d "${ConfDir}" ]]; then
 		printf "Creating playlist directory at '%s'\n" "$ConfDir"
