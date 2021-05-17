@@ -1,13 +1,13 @@
 # plaintext-playlist
 
+![Example Image](./.github/example.png)
+
 ```
 >>>PMARK
 perl -E 'print "`"x3, "\n"'
 ./plainplay -h
 perl -E 'print "`"x3, "\n"'
 ```
-
-### [Demo Video](https://sean.fish/p/plainplay_demo.mp4)
 
 ## Rationale
 

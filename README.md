@@ -1,5 +1,7 @@
 # plaintext-playlist
 
+![Example Image](./.github/example.png)
+
 ```
 Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
 
@@ -50,8 +52,6 @@ playlistdir                   | Print the location of the playlist directory
 check                         | Makes sure that all songs in all your playlists exist
 resolve                       | Attempts to fix broken paths in playlists
 ```
-
-### [Demo Video](https://sean.fish/p/plainplay_demo.mp4)
 
 ## Rationale
 
