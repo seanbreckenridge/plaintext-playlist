@@ -60,8 +60,6 @@ Additionally, since this is just lines of text, you're free to turn the `playlis
 
 ![](https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/.github/playlists_git.png)
 
----
-
 I have lots of aliases I use to selectively play songs from my playlists:
 
 ```
@@ -70,8 +68,6 @@ perl -E 'print "`"x3, "\n"'
 curl -sL 'https://sean.fish/d/other_aliases' | awk '/seanbreckenridge\/plaintext-playlist\.git/,/^\s*$/' | sed -E -e '/^s*$/d' -e '1d'
 perl -E 'print "`"x3, "\n"'
 ```
-
----
 
 To create an archive of a playlist, (when in your top-level Music directory) can use tar like:
 
@@ -82,6 +78,8 @@ To create an archive of a playlist, (when in your top-level Music directory) can
 As some more complicated examples of what this enables me to do:
 
 I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets) scripts) to to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints the path of the currently playing song. Whenever I'm listening to an album and I want to add a song to a playlist, I do `playlist curplaying`, it drops me into `fzf` to pick a playlist, and it adds the song that's currently playing to whatever I select.
+
+[`linkmusic`](https://github.com/seanbreckenridge/dotfiles/blob/master/.local/scripts/generic/linkmusic) is a `rsync`-like script which creates hardlinks for every file into a separate directory, so I can use [`syncthing`](https://github.com/syncthing/syncthing) to sync all files in my playlists across my computers/onto my phone, without syncing my entire music collection
 
 I have a script [here](https://github.com/seanbreckenridge/vps/blob/master/playlist) which I use to combine multiple playlists into one long `mp3` file, which I then sync up to my server, so I can listen to it on my phone.
 
