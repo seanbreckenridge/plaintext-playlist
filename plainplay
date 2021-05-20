@@ -14,7 +14,8 @@ declare MusicDir=
 # defaults to fzf interactive if not set
 declare ReadInputType=MULTI_SELECT_FZF
 declare ResolveAutoConfirm=
-declare PlaylistPathsMode=RELATIVE
+declare M3uMode=RELATIVE
+declare M3uIncludeDuration=0
 declare Action=
 declare ActivePlaylist=
 # used for shuffleall/playall
@@ -25,7 +26,7 @@ readonly PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-${HO
 # set default fzf command
 export FZF_DEFAULT_COMMAND="find -type f | sort"
 
-eprintf () {
+eprintf() {
 	printf "$@" 1>&2
 }
 
@@ -74,32 +75,35 @@ print_help() {
 	cat <<EOF
 Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
 
-  An interactive terminal playlist manager; stores playlists as text files
-  run without a COMMAND to drop into interactive mode
+	An interactive terminal playlist manager; stores playlists as text files
+	run without a COMMAND to drop into interactive mode
 
-  A hyphen (-) can be passed with add to instead
+	[playlist] specifies either the
+	name (without the location/.txt extension)
+	or the location of one of the playlists
+
+	curplaying uses my mpv-currently-playing script from
+	https://github.com/seanbreckenridge/mpv-sockets
+
+Additional Flags:
+	
+	add: A hyphen (-) can be passed with to instead
 	receive filenames from stdin. expects filenames to
 	be in the correct format
-  (cd to your Music dir and use find for good results)
+	(cd to your Music dir and use find for good results)
 
-  e.g.: find somedirectory -name "*.flac" | plainplay - add rock
+	e.g.: find somedirectory -name "*.flac" | plainplay - add rock
 
-  --auto-confirm can be passed with 'resolve' to automatically
-  use the closest match instead of prompting you to choose
-  one of the closest matching files to fix broken filepaths
+	resolve: --auto-confirm to automatically
+	use the closest match instead of prompting you to choose
+	one of the closest matching files to fix broken filepaths
 
-  --abs can be passed with 'm3u' to use absolute
-  paths for the generated m3u file, instead of paths
-  relative to your Music directory
+	m3u: --abs to use absolute paths for the generated m3u file,
+	instead of paths relative to your Music directory
 
-  e.g. plainplay --abs m3u rock
+	m3u: --duration to include the duration in the m3u file
 
-  [playlist] specifies either the
-  name (without the location/.txt extension)
-  or the location of one of the playlists
-
-  curplaying using my mpv-currently-playing script at
-  https://github.com/seanbreckenridge/mpv-sockets
+	e.g. plainplay --abs --duration m3u rock
 
 EOF
 	commands_list
@@ -157,7 +161,10 @@ parse_args() {
 			ResolveAutoConfirm="--auto-confirm"
 			;;
 		--abs)
-			PlaylistPathsMode=ABSOLUTE
+			M3uMode=ABSOLUTE
+			;;
+		--duration)
+			M3uIncludeDuration=1
 			;;
 
 		# command that optionally accept one playlist
@@ -456,36 +463,45 @@ run_plaintext_playlist() {
 		cd "${MusicDir}" && safe_concat
 		;;
 	M3U)
-		require jq
-		require ffprobe
+		if ((M3uIncludeDuration)); then
+			require jq
+			require ffprobe
+		fi
 		local -a filepaths=()
 		while read -r song; do
-			if [[ "${PlaylistPathsMode}" == 'ABSOLUTE' ]]; then
+			if [[ "${M3uMode}" == 'ABSOLUTE' ]]; then
 				filepaths+=("${MusicDir%/}/${song}")
 			else
 				filepaths+=("${song}")
 			fi
 		done < <(cd "${MusicDir}" && safe_concat)
 		printf '#EXTM3U\n'
-		for fp in "${filepaths[@]}"; do
-			metadataJson="$(cd "$MusicDir" && ffprobe -v quiet -print_format json -show_format "${fp}")" || {
-				echo -e "ffprobe failed for ${fp}" 1>&2
-				continue
-			}
-			durationFloat="$(jq -r '.format.duration' <<<"${metadataJson}")"
-			durationInt="${durationFloat%%.*}"
-			artistName="$(jq -r '.format.tags.artist' <<<"${metadataJson}")"
-			trackName="$(jq -r '.format.tags.title' <<<"${metadataJson}")"
-			printf '#EXTINF:%d' "${durationInt}"
-			# if we got both a artist and track name, include that in the metadata
-			if [[ "${artistName}" == 'null' || "${trackName}" == 'null' ]]; then
-				# no additional metadata, just print a newline
-				printf '\n'
-			else
-				printf ',%s - %s\n' "${artistName}" "${trackName}"
-			fi
-			printf '%s\n' "${fp}"
-		done
+		if ((M3uIncludeDuration)); then
+			for fp in "${filepaths[@]}"; do
+				metadataJson="$(cd "$MusicDir" && ffprobe -v quiet -print_format json -show_format "${fp}")" || {
+					echo -e "ffprobe failed for ${fp}" 1>&2
+					continue
+				}
+				durationFloat="$(jq -r '.format.duration' <<<"${metadataJson}")"
+				durationInt="${durationFloat%%.*}"
+				artistName="$(jq -r '.format.tags.artist' <<<"${metadataJson}")"
+				trackName="$(jq -r '.format.tags.title' <<<"${metadataJson}")"
+				printf '#EXTINF:%d' "${durationInt}"
+				# if we got both a artist and track name, include that in the metadata
+				if [[ "${artistName}" == 'null' || "${trackName}" == 'null' ]]; then
+					# no additional metadata, just print a newline
+					printf '\n'
+				else
+					printf ',%s - %s\n' "${artistName}" "${trackName}"
+				fi
+				printf '%s\n' "${fp}"
+			done
+		else
+			# just print the lines
+			for fp in "${filepaths[@]}"; do
+				printf '%s\n' "${fp}"
+			done
+		fi
 		;;
 	UNIQUE)
 		require uniq

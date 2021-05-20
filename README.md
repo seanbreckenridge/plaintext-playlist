@@ -5,32 +5,35 @@
 ```
 Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
 
-  An interactive terminal playlist manager; stores playlists as text files
-  run without a COMMAND to drop into interactive mode
+	An interactive terminal playlist manager; stores playlists as text files
+	run without a COMMAND to drop into interactive mode
 
-  A hyphen (-) can be passed with add to instead
+	[playlist] specifies either the
+	name (without the location/.txt extension)
+	or the location of one of the playlists
+
+	curplaying uses my mpv-currently-playing script from
+	https://github.com/seanbreckenridge/mpv-sockets
+
+Additional Flags:
+	
+	add: A hyphen (-) can be passed with to instead
 	receive filenames from stdin. expects filenames to
 	be in the correct format
-  (cd to your Music dir and use find for good results)
+	(cd to your Music dir and use find for good results)
 
-  e.g.: find somedirectory -name "*.flac" | plainplay - add rock
+	e.g.: find somedirectory -name "*.flac" | plainplay - add rock
 
-  --auto-confirm can be passed with 'resolve' to automatically
-  use the closest match instead of prompting you to choose
-  one of the closest matching files to fix broken filepaths
+	resolve: --auto-confirm to automatically
+	use the closest match instead of prompting you to choose
+	one of the closest matching files to fix broken filepaths
 
-  --abs can be passed with 'm3u' to use absolute
-  paths for the generated m3u file, instead of paths
-  relative to your Music directory
+	m3u: --abs to use absolute paths for the generated m3u file,
+	instead of paths relative to your Music directory
 
-  e.g. plainplay --abs m3u rock
+	m3u: --duration to include the duration in the m3u file
 
-  [playlist] specifies either the
-  name (without the location/.txt extension)
-  or the location of one of the playlists
-
-  curplaying using my mpv-currently-playing script at
-  https://github.com/seanbreckenridge/mpv-sockets
+	e.g. plainplay --abs --duration m3u rock
 
 add [playlist]                | Adds one or more songs to a playlist
 curplaying [playlist]         | Adds a currently playing mpv song to a playlist
