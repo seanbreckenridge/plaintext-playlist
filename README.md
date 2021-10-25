@@ -48,6 +48,7 @@ listall [playlist]...         | List songs from multiple playlists
 unique [playlist]             | Reduce a playlist to unique songs
 exif [playlist]               | Displays exif data for items in a playlist
 m3u [playlist]...             | Create a m3u playlist file from multiple playlists
+edit [playlist]               | Edit a playlist file with your $EDITOR
 playlist-create [playlist]    | Creates a new playlist - a playlist file
 playlist-delete [playlist]    | Delete an existing playlist - a playlist file
 playlist-list                 | List the full paths of each of your playlist files

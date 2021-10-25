@@ -61,6 +61,7 @@ listall [playlist]...         | List songs from multiple playlists
 unique [playlist]             | Reduce a playlist to unique songs
 exif [playlist]               | Displays exif data for items in a playlist
 m3u [playlist]...             | Create a m3u playlist file from multiple playlists
+edit [playlist]               | Edit a playlist file with your \$EDITOR
 playlist-create [playlist]    | Creates a new playlist - a playlist file
 playlist-delete [playlist]    | Delete an existing playlist - a playlist file
 playlist-list                 | List the full paths of each of your playlist files
@@ -168,7 +169,7 @@ parse_args() {
 			;;
 
 		# command that optionally accept one playlist
-		add | curplaying | remove | list | play | shuffle | single | unique | exif | playlist-create | playlist-delete)
+		add | curplaying | remove | list | play | shuffle | single | unique | exif | edit | playlist-create | playlist-delete)
 			Action="$(parse_command "$1")"
 			ActivePlaylist="$2" # get playlist name
 			shift               # shift command name off args, playlist name gets shifted off at the bottom of the while loop
@@ -343,7 +344,7 @@ run_plaintext_playlist() {
 	# Validate Playlist based on given arguments
 	# Prompt user if necessary
 	case "$Action" in
-	ADD | CURPLAYING | REMOVE | LIST | UNIQUE | EXIF | PLAY | SHUFFLE | SINGLE | PLAYLIST_DELETE)
+	ADD | CURPLAYING | REMOVE | LIST | UNIQUE | EXIF | EDIT | PLAY | SHUFFLE | SINGLE | PLAYLIST_DELETE)
 		if [[ -z "${ActivePlaylist}" ]]; then
 			ActivePlaylist="$(pick_existing_playlist)" || exit 1
 		fi
@@ -455,6 +456,9 @@ run_plaintext_playlist() {
 		echo -e "${filteredSongs}" >"${ActivePlaylist}"
 		echo -e "Removed the following from ${ActivePlaylist}:"
 		echo -e "${linesToRemove}"
+		;;
+	EDIT)
+		"${EDITOR:-${VISUAL:-'vim'}}" "${ActivePlaylist}"
 		;;
 	LIST)
 		cat "${ActivePlaylist}"
