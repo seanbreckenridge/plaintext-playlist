@@ -27,6 +27,7 @@ readonly PromptHistoryFile="${PLAINTEXT_PLAYLIST_HISTORY:-${XDG_CACHE_HOME:-${HO
 export FZF_DEFAULT_COMMAND="find -type f | sort"
 
 eprintf() {
+	# shellcheck disable=SC2059
 	printf "$@" 1>&2
 }
 

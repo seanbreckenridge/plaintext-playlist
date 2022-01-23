@@ -4,11 +4,11 @@ import sys
 import os
 
 from glob import glob
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 try:
-    import textdistance
-    from pick import pick
+    import textdistance  # type: ignore[import]
+    from pick import pick  # type: ignore[import]
 except ImportError:
     print(
         "Could not find the 'textdistance' or 'pick' package. Run 'pip3 install --user -U textdistance pick' to install it.",
@@ -16,10 +16,10 @@ except ImportError:
     )
     sys.exit(1)
 
-playlist_dir = None
-music_dir = None
-all_filepaths = None
-auto_confirm = False
+playlist_dir: Optional[str] = None
+music_dir: Optional[str] = None
+all_filepaths: Optional[List[str]] = None
+auto_confirm: bool = False
 
 
 def read_playlist_file(playlist_file: str) -> List[str]:
@@ -84,7 +84,9 @@ def fix_filepath(broken_songpath: str) -> str:
     return replace_with_filepath
 
 
-def replace_fixed_filepaths_and_write(replacements: Dict[int, str], filename: str):
+def replace_fixed_filepaths_and_write(
+    replacements: Dict[int, str], filename: str
+) -> None:
     """
     Replaces items that have been resolved, writes back to the playlist file
     if there are changes
@@ -106,7 +108,7 @@ def replace_fixed_filepaths_and_write(replacements: Dict[int, str], filename: st
         print("Wrote replacements to", filename)
 
 
-def enumerate_playlists(playlist_dir) -> List[str]:
+def enumerate_playlists(playlist_dir: str) -> List[str]:
     """
     Returns a list of the playlist .txt files
     """
