@@ -100,7 +100,7 @@ To create an archive of a playlist, (when in your top-level Music directory) can
 
 As some more complicated examples of what this enables me to do:
 
-I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets) scripts) to to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints the path of the currently playing song. Whenever I'm listening to an album and I want to add a song to a playlist, I do `playlist curplaying`, it drops me into `fzf` to pick a playlist, and it adds the song that's currently playing to whatever I select.
+I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets) scripts) to to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints the path of the currently playing song. Whenever I'm listening to an album and I want to add a song to a playlist, I do `plainplay curplaying`, it drops me into `fzf` to pick a playlist, and it adds the song that's currently playing to whatever I select.
 
 [`not-in-playlist`](https://sean.fish/d/not-in-playlist?dark), which I use to find any albums in my music directory which don't have any songs in any of my playlists, i.e. pick a random album in my music directory I haven't listened to yet.
 
@@ -110,7 +110,7 @@ I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbrecken
 
 On my phone (android), I use [`foobar2000`](https://www.foobar2000.org/apk), which accepts `m3u8` files as playlists. So, using the `plainplay m3u` command, I can [re-create the `m3u8` files](https://sean.fish/d/create_playlists.job?dark) in my top-level music directory on my phone, which foobar can then use:
 
-![Example Image](./.github/phone_playlists.png)
+<img src="./.github/phone_playlists.png" width="400" />
 
 An example of me getting the [music/playlist configuration/paths to work across devices](https://github.com/seanbreckenridge/dotfiles/blob/23e18977a15b3fa4a968626bd3655a7a2a6c8a88/.profile#L79-L104) (`XDG_MUSIC_DIR` and `PLAINTEXT_PLAYLIST_PLAYLISTS`)
 
