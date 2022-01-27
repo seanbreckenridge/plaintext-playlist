@@ -24,7 +24,29 @@ This only stores the relative filepath to your base music directory in each file
 
 `resolve` will use the dice coefficient to try and resolve the broken filepath to an existing filepath in your music directory.
 
-### Scripting
+### Configuration/Installation
+
+To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
+
+```sh
+git clone https://github.com/seanbreckenridge/plaintext-playlist
+cd plaintext-playlist
+cp plainplay resolve_cmd_plainplay ~/.local/bin
+```
+
+Requires at least `bash` version 4.0.
+
+External dependencies: `mpv`, `fzf`, `python3`,(`pip3 install --user -U textdistance pick`), `ffprobe` (installed with `ffmpeg`), `jq`
+
+This follows 'Progressive Enhancement' with regard to external dependencies; for example, if you never use `resolve`, the corresponding dependency isn't required. Before you use a command it checks if you have the required external commands installed.
+
+Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_PLAYLISTS` (defaults to `~/.local/share/plaintext_playlist`).
+
+You must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory. If you don't have one place you keep all your music, you can set your `$HOME` directory, or `/`, which would cause the playlist files to use absolute paths instead. However, that would make the `resolve` function work very slowly, since it would have to search your entire system to find paths to match broken paths against.
+
+For `zsh` completion support, see [here](https://sean.fish/d/_plainplay).
+
+### Basic Scripting
 
 Since the specification/file format is extremely simple, it integrates nicely with lots of shell tools that work on lines of text.
 
@@ -44,7 +66,8 @@ If I want to selectively play songs from all my playlists, I can do so like:
 
 ```
 $ cd ~/Music
-$ grep -hiE 'mario|runescape|kirby|pokemon' $(find $(plainplay playlistdir) -type f) \
+$ grep -hiE 'mario|runescape|kirby|pokemon' \
+	$(find $(plainplay playlistdir) -type f) \
 	| shuf | mpv --playlist=-
 ```
 
@@ -73,39 +96,23 @@ To create an archive of a playlist, (when in your top-level Music directory) can
 
 `tar -cvf playlist_name.tar -T <(plainplay list <playlistname>)`
 
----
+### Companion Scripts
 
 As some more complicated examples of what this enables me to do:
 
 I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets) scripts) to to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints the path of the currently playing song. Whenever I'm listening to an album and I want to add a song to a playlist, I do `playlist curplaying`, it drops me into `fzf` to pick a playlist, and it adds the song that's currently playing to whatever I select.
 
-[`linkmusic`](https://github.com/seanbreckenridge/dotfiles/blob/master/.local/scripts/generic/linkmusic) is a `rsync`-like script which creates hardlinks for every file in my playlists into a separate directory, so I can use [`syncthing`](https://github.com/syncthing/syncthing) to sync all the songs in my playlists across my computers/onto my phone, without syncing my entire music collection
+[`not-in-playlist`](https://sean.fish/d/not-in-playlist?dark), which I use to find any albums in my music directory which don't have any songs in any of my playlists, i.e. pick a random album in my music directory I haven't listened to yet.
 
-I have a script [here](https://github.com/seanbreckenridge/vps/blob/master/playlist) which I use to combine multiple playlists into one long `mp3` file, which I then sync up to my server, so I can listen to it on my phone.
+#### Syncing music and playlists to my phone
 
-Another script [here](https://gist.github.com/seanbreckenridge/8ec7da1c81cf3741396b29af5f7253b7), which I use to find any albums in my music directory which don't have any songs in any of my playlists, i.e. pick a random album in my music directory I haven't listened to yet.
+[`linkmusic`](https://github.com/seanbreckenridge/dotfiles/blob/master/.local/scripts/generic/linkmusic) is a `rsync`-like script which creates hardlinks for every file in my playlists into a separate directory (e.g., `~/.local/share/musicsync/`). Then, I use [`syncthing`](https://github.com/syncthing/syncthing) to sync all the songs in my playlists across my computers/onto my phone, without syncing my entire music collection
 
-### Configuration/Installation
+On my phone (android), I use [`foobar2000`](https://www.foobar2000.org/apk), which accepts `m3u8` files as playlists. So, using the `plainplay m3u` command, I can [re-create the `m3u8` files](https://sean.fish/d/create_playlists.job?dark) in my top-level music directory on my phone, which foobar can then use:
 
-To install, download the two scripts `plainplay`/`resolve_cmd_plainplay` and put it on your `$PATH` somewhere, e.g.:
+![Example Image](./.github/phone_playlists.png)
 
-```sh
-git clone https://github.com/seanbreckenridge/plaintext-playlist
-cd plaintext-playlist
-cp plainplay resolve_cmd_plainplay ~/.local/bin
-```
-
-Requires at least `bash` version 4.0.
-
-External dependencies: `mpv`, `fzf`, `python3`,(`pip3 install --user -U textdistance pick`), `ffprobe` (installed with `ffmpeg`), `jq`
-
-This follows 'Progressive Enhancement' with regard to external dependencies; for example, if you never use `resolve`, the corresponding dependency isn't required. Before you use a command it checks if you have the required external commands installed.
-
-Stores configuration (playlists) at `PLAINTEXT_PLAYLIST_PLAYLISTS` (defaults to `~/.local/share/plaintext_playlist`).
-
-You must set `PLAINTEXT_PLAYLIST_MUSIC_DIR` as an environment variable, which defines your 'root' music directory. If you don't have one place you keep all your music, you can set your `$HOME` directory, or `/`, which would cause the playlist files to use absolute paths instead. However, that would make the `resolve` function work very slowly, since it would have to search your entire system to find paths to match broken paths against.
-
-For `zsh` completion support, see [here](https://sean.fish/d/_plainplay).
+An example of me getting the [music/playlist configuration/paths to work across devices](https://github.com/seanbreckenridge/dotfiles/blob/23e18977a15b3fa4a968626bd3655a7a2a6c8a88/.profile#L79-L104) (`XDG_MUSIC_DIR` and `PLAINTEXT_PLAYLIST_PLAYLISTS`)
 
 ### Specification
 
