@@ -177,7 +177,7 @@ I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbrecken
 
 On my phone (android), I use [`foobar2000`](https://www.foobar2000.org/apk), which accepts `m3u8` files as playlists. So, using the `plainplay m3u` command, I can [re-create the `m3u8` files](https://sean.fish/d/create_playlists.job?dark) in my top-level music directory on my phone, which foobar can then use:
 
-![Example Image](./.github/phone_playlists.png)
+<img src="./.github/phone_playlists.png" width="400" />
 
 An example of me getting the [music/playlist configuration/paths to work across devices](https://github.com/seanbreckenridge/dotfiles/blob/23e18977a15b3fa4a968626bd3655a7a2a6c8a88/.profile#L79-L104) (`XDG_MUSIC_DIR` and `PLAINTEXT_PLAYLIST_PLAYLISTS`)
 
