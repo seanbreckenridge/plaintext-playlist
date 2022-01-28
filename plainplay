@@ -252,7 +252,9 @@ get_playlist_path() {
 }
 
 make_sure_playlists_exist() {
-	(($(playlist_count) == 0)) && abort "Error: No playlists exist. Create one before trying to select one"
+	local playlist_count
+	playlist_count="$(command ls -1 "${ConfDir}" | wc -l)"
+	((playlist_count == 0)) && abort "Error: No playlists exist. Create one before trying to select one"
 }
 
 # presents the user with a prompt of playlists to choose from
@@ -277,11 +279,6 @@ pick_multiple_existing_playlists() {
 # lists the names of the playlists (without .txt)
 list_playlists() {
 	command ls -1 "${ConfDir}" | grep -i ".txt$" | sed -e "s/\.txt//g"
-}
-
-# returns the number of playlists
-playlist_count() {
-	command ls -1 "${ConfDir}" | wc -l
 }
 
 # ask the user for some input, hit enter to continue. "$1" is the prompt string
