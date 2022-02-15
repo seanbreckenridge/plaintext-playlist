@@ -82,6 +82,12 @@ cd plaintext-playlist
 cp plainplay resolve_cmd_plainplay ~/.local/bin
 ```
 
+Could also use [`basher`](https://github.com/basherpm/basher):
+
+```bash
+basher install seanbreckenridge/plaintext-playlist
+```
+
 Requires at least `bash` version 4.0.
 
 External dependencies: `mpv`, `fzf`, `python3`,(`pip3 install --user -U textdistance pick`), `ffprobe` (installed with `ffmpeg`), `jq`
