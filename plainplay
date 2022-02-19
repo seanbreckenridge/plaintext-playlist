@@ -287,12 +287,19 @@ generic_input() {
 	printf '%s\n' "${reply}"
 }
 
+# recieves lines of text, each a path - resolves to an absolute path
+list_to_absolute() {
+	while read -r line; do
+		realpath "${line}"
+	done
+}
+
 # uses the current directory plus passed filenames to resolve relative paths
 convert_to_playlist_filenames() {
 	local relativeFilenames absoluteFilenames
 	relativeFilenames="$(cat)"
 	# get absolute path of all of the music to be added
-	absoluteFilenames="$(sed -e "s#^.##" -e "s#^#$PWD#" <<<"${relativeFilenames}")"
+	absoluteFilenames="$(list_to_absolute <<<"${relativeFilenames}")"
 	# make sure user gave data
 	[[ -z "${absoluteFilenames}" ]] && abort "Did not receive any filenames to add"
 	echo -e "${absoluteFilenames}" | remove_music_dir
