@@ -52,7 +52,7 @@ def check_playlist(playlist_file: str) -> List[Tuple[int, str]]:
     of them if any exist.
     """
     assert music_dir is not None
-    print("Checking '{}'...".format(playlist_file))
+    print("Resolving '{}'...".format(playlist_file))
     broken_songpaths: List[Tuple[int, str]] = []
     songs = read_playlist_file(playlist_file)
     for i, song in enumerate(songs):
