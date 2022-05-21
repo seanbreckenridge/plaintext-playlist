@@ -8,10 +8,10 @@ from typing import List, Tuple, Dict, Optional
 
 try:
     import textdistance  # type: ignore[import]
-    from pick import pick  # type: ignore[import]
+    from pyfzf import FzfPrompt  # type: ignore[import]
 except ImportError:
     print(
-        "Could not find the 'textdistance' or 'pick' package. Run 'pip3 install --user -U textdistance pick' to install it.",
+        "Could not find the 'textdistance' or 'pyfzf_iter' package. Run 'pip3 install --user -U textdistance pyfzf_iter' to install it.",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -77,10 +77,15 @@ def fix_filepath(broken_songpath: str) -> str:
     if auto_confirm:
         replace_with_filepath = similarity_scores[0][0]
     else:
-        replace_with_filepath, _ = pick(
+        bpath = broken_songpath.replace("'", "")
+        replace_with_filepath_res = FzfPrompt().prompt(
             [sc[0] for sc in similarity_scores],
-            "Replace {} with".format(broken_songpath),
+            '--prompt="Replace {} with > "'.format(bpath),
         )
+        assert (
+            len(replace_with_filepath_res) == 1
+        ), f"Expected 1 result from fzf query, recieved '{replace_with_filepath_res}'"
+        replace_with_filepath = replace_with_filepath_res[0]
     return replace_with_filepath
 
 

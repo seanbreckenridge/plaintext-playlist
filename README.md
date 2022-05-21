@@ -16,7 +16,7 @@ Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
 	https://github.com/seanbreckenridge/mpv-sockets
 
 Additional Flags:
-	
+
 	add: A hyphen (-) can be passed with to instead
 	receive filenames from stdin. expects filenames to
 	be in the correct format
@@ -90,7 +90,7 @@ basher install seanbreckenridge/plaintext-playlist
 
 Requires at least `bash` version 4.0.
 
-External dependencies: `mpv`, `fzf`, `python3`,(`pip3 install --user -U textdistance pick`), `ffprobe` (installed with `ffmpeg`), `jq`
+External dependencies: `mpv`, `fzf`, `python3`,(`pip3 install --user -U textdistance pyfzf_iter`), `ffprobe` (installed with `ffmpeg`), `jq`
 
 This follows 'Progressive Enhancement' with regard to external dependencies; for example, if you never use `resolve`, the corresponding dependency isn't required. Before you use a command it checks if you have the required external commands installed.
 
