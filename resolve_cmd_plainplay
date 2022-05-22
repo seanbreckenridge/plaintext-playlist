@@ -82,6 +82,12 @@ def fix_filepath(broken_songpath: str) -> str:
             [sc[0] for sc in similarity_scores],
             '--prompt="Replace {} with > "'.format(bpath),
         )
+        if len(replace_with_filepath_res) == 0:
+            print(
+                f"Warning: didnt recieve any response for {broken_songpath}",
+                file=sys.stderr,
+            )
+            return broken_songpath
         assert (
             len(replace_with_filepath_res) == 1
         ), f"Expected 1 result from fzf query, recieved '{replace_with_filepath_res}'"
