@@ -42,7 +42,7 @@ basher install seanbreckenridge/plaintext-playlist
 
 Requires at least `bash` version 4.0.
 
-External dependencies: `mpv`, `fzf`, `python3`,(`pip3 install --user -U textdistance pick`), `ffprobe` (installed with `ffmpeg`), `jq`
+External dependencies: `mpv`, `fzf`, `python3`,(`pip3 install --user -U textdistance pyfzf_iter`), `ffprobe` (installed with `ffmpeg`), `jq`
 
 This follows 'Progressive Enhancement' with regard to external dependencies; for example, if you never use `resolve`, the corresponding dependency isn't required. Before you use a command it checks if you have the required external commands installed.
 
@@ -112,7 +112,7 @@ I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbrecken
 
 #### Syncing music and playlists to my phone
 
-[`linkmusic`](https://github.com/seanbreckenridge/dotfiles/blob/master/.local/scripts/generic/linkmusic) is a `rsync`-like script which creates hardlinks for every file in my playlists into a separate directory (e.g., `~/.local/share/musicsync/`). Then, I use [`syncthing`](https://github.com/syncthing/syncthing) to sync all the songs in my playlists across my computers/onto my phone, without syncing my entire music collection
+[`linkmusic`](https://github.com/seanbreckenridge/plaintext_playlist_py/blob/master/bin/linkmusic) is a `rsync`-like script which creates hardlinks for every file in my playlists into a separate directory (e.g., `~/.local/share/musicsync/`). Then, I use [`syncthing`](https://github.com/syncthing/syncthing) to sync all the songs in my playlists across my computers/onto my phone, without syncing my entire music collection
 
 On my phone (android), I use [`foobar2000`](https://www.foobar2000.org/apk), which accepts `m3u8` files as playlists. So, using the `plainplay m3u` command, I can [re-create the `m3u8` files](https://sean.fish/d/create_playlists.job?dark) in my top-level music directory on my phone, which foobar can then use:
 
