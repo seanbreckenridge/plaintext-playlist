@@ -137,7 +137,7 @@ Additionally, since this is just lines of text, you're free to turn the `playlis
 
 ![](https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/.github/playlists_git.png)
 
-I have lots of aliases I use to selectively play songs from my playlists:
+I have lots of aliases I use to selectively play songs from my playlists ([`./functions.sh`](./functions.sh)):
 
 ```bash
 # --msg-level=file=error removes the 'reading from stdin...' info message
