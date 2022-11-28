@@ -89,12 +89,12 @@ Additionally, since this is just lines of text, you're free to turn the `playlis
 
 ![](https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/.github/playlists_git.png)
 
-I have lots of aliases I use to selectively play songs from my playlists:
+I have lots of aliases I use to selectively play songs from my playlists ([`./functions.sh`](./functions.sh)):
 
 ```
 >>>PMARK
-perl -E 'print "`"x3, "\n"'
-curl -sL 'https://sean.fish/d/project_aliases' | awk '/seanbreckenridge\/plaintext-playlist\.git/,/^\s*$/' | sed -E -e '/^s*$/d' -e '1d'
+perl -E 'print "`"x3, "bash\n"'
+sed -E -e '/^s*$/d' <./functions.sh | awk 'NR > 2'
 perl -E 'print "`"x3, "\n"'
 ```
 

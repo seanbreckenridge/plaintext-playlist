@@ -139,7 +139,7 @@ Additionally, since this is just lines of text, you're free to turn the `playlis
 
 I have lots of aliases I use to selectively play songs from my playlists:
 
-```
+```bash
 # --msg-level=file=error removes the 'reading from stdin...' info message
 alias mpv-from-stdin='mpv --playlist=- --no-audio-display --msg-level=file=error'
 alias mpv-shuffle='mpv-from-stdin --shuffle'
@@ -163,6 +163,8 @@ alias playrg='cm; playrg_f'
 alias 'playrg-=cm; playrg-_f'
 alias playfzf='cm; rg --color never --with-filename --no-heading "" "${PLAINTEXT_PLAYLIST_PLAYLISTS}/"*.txt | sed -e "s|^${PLAINTEXT_PLAYLIST_PLAYLISTS}/||" | fzf'
 alias 'playfzf-=playfzf | cut -d":" -f2- | mpv-from-stdin'
+bindkey -s '^P' "^uplay^M"
+alias "list-albums=cm; find -maxdepth 3 -type f -printf '%h\n' | sort -u | cut -d'/' -f2- | grep -vi twitch"
 ```
 
 To create an archive of a playlist, (when in your top-level Music directory) can use tar like:
