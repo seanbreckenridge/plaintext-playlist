@@ -137,18 +137,21 @@ Additionally, since this is just lines of text, you're free to turn the `playlis
 
 ![](https://raw.githubusercontent.com/seanbreckenridge/plaintext-playlist/master/.github/playlists_git.png)
 
-I have lots of aliases I use to selectively play songs from my playlists ([`./functions.sh`](./functions.sh)):
+I have lots of aliases I use to selectively play songs from my playlists ([`functions.sh`](./functions.sh)):
 
 ```bash
 # --msg-level=file=error removes the 'reading from stdin...' info message
 alias mpv-from-stdin='mpv --playlist=- --no-audio-display --msg-level=file=error'
 alias mpv-shuffle='mpv-from-stdin --shuffle'
+# change directory to music/playlist directories
 alias cm='cd "${PLAINTEXT_PLAYLIST_MUSIC_DIR:-${XDG_MUSIC_DIR:-"${HOME}/Music"}}"'
 alias cdpl='cd "${PLAINTEXT_PLAYLIST_PLAYLISTS}"'
+# shorthands
 alias play='plainplay'
 alias pplay='plainplay play'
 alias splay='plainplay shuffle'
 alias splayall='fd . "$PLAINTEXT_PLAYLIST_PLAYLISTS" -X plainplay shuffleall'
+# list/play all music that matches 'rg' pattern
 playrg_f() {
 	cm
 	fd . "$(plainplay playlistdir)" --type file -X cat | rg -i "$*"
@@ -161,10 +164,9 @@ playrg-_f() {
 # use aliases so that the 'cd' actually changes directory in the shell
 alias playrg='cm; playrg_f'
 alias 'playrg-=cm; playrg-_f'
+# fzf to play music
 alias playfzf='cm; rg --color never --with-filename --no-heading "" "${PLAINTEXT_PLAYLIST_PLAYLISTS}/"*.txt | sed -e "s|^${PLAINTEXT_PLAYLIST_PLAYLISTS}/||" | fzf'
 alias 'playfzf-=playfzf | cut -d":" -f2- | mpv-from-stdin'
-bindkey -s '^P' "^uplay^M"
-alias "list-albums=cm; find -maxdepth 3 -type f -printf '%h\n' | sort -u | cut -d'/' -f2- | grep -vi twitch"
 ```
 
 To create an archive of a playlist, (when in your top-level Music directory) can use tar like:
