@@ -14,7 +14,8 @@ alias splayall='fd . "$PLAINTEXT_PLAYLIST_PLAYLISTS" -X plainplay shuffleall'
 # list/play all music that matches 'rg' pattern
 playrg_f() {
 	cm
-	fd . "$(plainplay playlistdir)" --type file -X cat | rg -i "$*"
+	# https://github.com/seanbreckenridge/core/blob/main/shellscripts/unique
+	fd . "$(plainplay playlistdir)" --type file -X cat | unique | rg -i "$*"
 }
 # play all paths that match whatever I pass as positional arguments
 playrg-_f() {
