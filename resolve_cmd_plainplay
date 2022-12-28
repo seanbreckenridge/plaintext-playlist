@@ -4,7 +4,7 @@ import sys
 import os
 
 from glob import glob
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Callable
 
 try:
     import textdistance  # type: ignore[import]
@@ -62,37 +62,56 @@ def check_playlist(playlist_file: str) -> List[Tuple[int, str]]:
     return broken_songpaths
 
 
-def fix_filepath(broken_songpath: str) -> str:
+def extension_matches(pth1: str, pth2: str) -> bool:
+    _, pth1_ext = os.path.splitext(pth1)
+    _, pth2_ext = os.path.splitext(pth2)
+    return pth1_ext == pth2_ext
+
+
+def fix_filepath(broken_songpath: str) -> Callable[[], str]:
     """
     Uses the text distance to try and fix a broken songpath,
     prompts the user if --auto-confirm wasn't passed
     Returns the new filepath.
     """
     all_filepaths = get_music_dir_files()
+    print(f"calculating scores for {broken_songpath}...", file=sys.stderr)
     similarity_scores: List[Tuple[str, int]] = [
-        (filepath, textdistance.sorensen_dice(broken_songpath, filepath))
+        (
+            filepath,
+            textdistance.algorithms.damerau_levenshtein(broken_songpath, filepath),
+        )
         for filepath in all_filepaths
+        if extension_matches(broken_songpath, filepath)
     ]
-    similarity_scores.sort(key=lambda item: item[1], reverse=True)
+    similarity_scores.sort(key=lambda item: item[1], reverse=False)
     if auto_confirm:
-        replace_with_filepath = similarity_scores[0][0]
+        return lambda: similarity_scores[0][0]
     else:
         bpath = broken_songpath.replace("'", "")
-        replace_with_filepath_res = FzfPrompt().prompt(
-            [sc[0] for sc in similarity_scores],
-            '--prompt="Replace {} with > "'.format(bpath),
-        )
-        if len(replace_with_filepath_res) == 0:
-            print(
-                f"Warning: didnt recieve any response for {broken_songpath}",
-                file=sys.stderr,
+        query = os.path.basename(bpath.casefold())
+        kwargs = {}
+        if "QUERY" in os.environ:
+            kwargs["query"] = query
+
+        def _call_fzf() -> str:
+            replace_with_filepath_res = FzfPrompt().prompt(
+                [sc[0] for sc in similarity_scores],
+                '--prompt="{} with > "'.format(bpath),
+                **kwargs,
             )
-            return broken_songpath
-        assert (
-            len(replace_with_filepath_res) == 1
-        ), f"Expected 1 result from fzf query, recieved '{replace_with_filepath_res}'"
-        replace_with_filepath = replace_with_filepath_res[0]
-    return replace_with_filepath
+            if len(replace_with_filepath_res) == 0:
+                print(
+                    f"Warning: didnt recieve any response for {broken_songpath}",
+                    file=sys.stderr,
+                )
+                raise RuntimeError
+            assert (
+                len(replace_with_filepath_res) == 1
+            ), f"Expected 1 result from fzf query, recieved '{replace_with_filepath_res}'"
+            return replace_with_filepath_res[0]
+
+        return _call_fzf
 
 
 def replace_fixed_filepaths_and_write(
@@ -123,7 +142,10 @@ def enumerate_playlists(playlist_dir: str) -> List[str]:
     """
     Returns a list of the playlist .txt files
     """
-    return glob("{}/*.txt".format(playlist_dir.rstrip("/")))
+    return sorted(
+        glob("{}/*.txt".format(playlist_dir.rstrip("/"))),
+        key=lambda pl: os.stat(pl).st_size,
+    )
 
 
 def main(cmd_args: List[str]) -> int:
@@ -137,10 +159,12 @@ def main(cmd_args: List[str]) -> int:
     playlist_dir, music_dir, *rest = cmd_args
     auto_confirm = "--auto-confirm" in rest
     for playlist in enumerate_playlists(playlist_dir):
-        playlist_replacements: Dict[int, str] = {}
+        playlist_replacements: Dict[int, Callable[[], str]] = {}
         for i, broken_songpath in check_playlist(playlist):
             playlist_replacements[i] = fix_filepath(broken_songpath)
-        replace_fixed_filepaths_and_write(playlist_replacements, playlist)
+        replace_fixed_filepaths_and_write(
+            {i: fn() for i, fn in playlist_replacements.items()}, playlist
+        )
     return 0
 
 
