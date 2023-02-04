@@ -16,7 +16,7 @@ Usage: plainplay [-h] [-] [OPTIONS] [COMMAND [ARGS]]
 	https://github.com/seanbreckenridge/mpv-sockets
 
 Additional Flags:
-	
+
 	add: A hyphen (-) can be passed with to instead
 	receive filenames from stdin. expects filenames to
 	be in the correct format
