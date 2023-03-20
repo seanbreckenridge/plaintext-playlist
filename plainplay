@@ -109,14 +109,13 @@ Additional Flags:
 
 EOF
 	commands_list
-	exit 0
+	exit "${1:-0}"
 }
 
 # prints help and exits if the user asked for help
 check_for_help() {
-	if [[ $1 =~ "help" || $1 == "-h" ]]; then
+	if [[ $1 =~ "help" || $1 == "-h" || $1 == "--help" ]]; then
 		print_help
-		exit 0
 	fi
 }
 
@@ -205,8 +204,7 @@ parse_args() {
 				;;
 			*)
 				printf "Error: Unexpected argument: %s\n\n" "$1" 1>&2
-				print_help
-				exit 1
+				print_help 1
 				;;
 			esac
 			;;
