@@ -190,6 +190,8 @@ On my phone (android), I use [`foobar2000`](https://www.foobar2000.org/apk), whi
 
 <img src="./.github/phone_playlists.png" width="400" />
 
+To shuffle the `m3u8` files, I wrote a separate tool [`m3u-shuf`](https://github.com/seanbreckenridge/m3u-shuf)
+
 An example of me getting the [music/playlist configuration/paths to work across devices](https://github.com/seanbreckenridge/dotfiles/blob/23e18977a15b3fa4a968626bd3655a7a2a6c8a88/.profile#L79-L104) (`XDG_MUSIC_DIR` and `PLAINTEXT_PLAYLIST_PLAYLISTS`)
 
 Python library [here](https://github.com/seanbreckenridge/plaintext_playlist_py) which has code to glob the `.txt` files from `plaintext-playlist`, as well as a couple other misc scripts, like [validating id3 data](https://github.com/seanbreckenridge/plaintext_playlist_py/blob/master/bin/id3stuff), or [removing private (amazon/gracenote) id3 frames](https://github.com/seanbreckenridge/HPI-personal/blob/master/scripts/mpv_clean_priv_frames) using data saved by [`mpv-history-daemon`](https://github.com/seanbreckenridge/mpv-history-daemon)
