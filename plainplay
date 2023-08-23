@@ -285,7 +285,7 @@ generic_input() {
 	printf '%s\n' "${reply}"
 }
 
-# recieves lines of text, each a path - resolves to an absolute path
+# receives lines of text, each a path - resolves to an absolute path
 list_to_absolute() {
 	while read -r line; do
 		realpath "${line}"

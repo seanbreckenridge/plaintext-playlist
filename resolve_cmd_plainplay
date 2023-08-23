@@ -102,13 +102,13 @@ def fix_filepath(broken_songpath: str) -> Callable[[], str]:
             )
             if len(replace_with_filepath_res) == 0:
                 print(
-                    f"Warning: didnt recieve any response for {broken_songpath}",
+                    f"Warning: didnt receive any response for {broken_songpath}",
                     file=sys.stderr,
                 )
                 raise RuntimeError
             assert (
                 len(replace_with_filepath_res) == 1
-            ), f"Expected 1 result from fzf query, recieved '{replace_with_filepath_res}'"
+            ), f"Expected 1 result from fzf query, received '{replace_with_filepath_res}'"
             return replace_with_filepath_res[0]
 
         return _call_fzf
