@@ -331,7 +331,7 @@ check_playlist() {
 }
 
 # safely concatenates the files in AllActivePlaylists, prints the result to STDOUT
-# incase files dont end properly with a newline, this adds an extra line
+# in case files dont end properly with a newline, this adds an extra line
 # to the end, and then removes it if it was empty
 safe_concat() {
 	{
@@ -436,11 +436,11 @@ run_plaintext_playlist() {
 		;;
 	CURPLAYING)
 		require mpv-currently-playing
-		# get currently playing songs, limit to items which arent paused
+		# get currently playing songs, limit to items which aren't paused
 		curPlayingSongs="$(mpv-currently-playing 2>/dev/null)"
 		curPlayingSongsCount="$(wc -l <<<"${curPlayingSongs}")"
-		[[ -z "${curPlayingSongs}" ]] && abort "Did not receieve any paths from active mpv instances"
-		# if theres only one playing, select that, else fzf to select one of the playing songs
+		[[ -z "${curPlayingSongs}" ]] && abort "Did not receive any paths from active mpv instances"
+		# if there's only one playing, select that, else fzf to select one of the playing songs
 		if ((curPlayingSongsCount == 1)); then
 			chosenSong="${curPlayingSongs}"
 		else

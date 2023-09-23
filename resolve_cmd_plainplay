@@ -32,7 +32,7 @@ def read_playlist_file(playlist_file: str) -> List[str]:
 
 def get_music_dir_files():
     """
-    If it hasnt already been indexed, get absolute paths
+    If it hasn't already been indexed, get absolute paths
     for each item in 'music_directory'
     """
     assert music_dir is not None
@@ -102,7 +102,7 @@ def fix_filepath(broken_songpath: str) -> Callable[[], str]:
             )
             if len(replace_with_filepath_res) == 0:
                 print(
-                    f"Warning: didnt receive any response for {broken_songpath}",
+                    f"Warning: didn't receive any response for {broken_songpath}",
                     file=sys.stderr,
                 )
                 raise RuntimeError
