@@ -108,7 +108,7 @@ As some more complicated examples of what this enables me to do:
 
 I use `mpv`'s IPC sockets (see my [`mpv-sockets`](https://github.com/seanbreckenridge/mpv-sockets) scripts) to to send commands to the currently running `mpv` instance. The `mpv-currently-playing` script from there prints the path of the currently playing song. Whenever I'm listening to an album and I want to add a song to a playlist, I do `plainplay curplaying`, it drops me into `fzf` to pick a playlist, and it adds the song that's currently playing to whatever I select.
 
-[`not-in-playlist`](https://sean.fish/d/not-in-playlist?dark), which I use to find any albums in my music directory which don't have any songs in any of my playlists, i.e. pick a random album in my music directory I haven't listened to yet.
+[`not-in-playlist`](https://github.com/seanbreckenridge/plaintext_playlist_py/blob/master/bin/not-in-playlist), which I use to find any albums in my music directory which don't have any songs in any of my playlists, i.e. pick a random album in my music directory I haven't listened to yet.
 
 #### Syncing music and playlists to my phone
 
