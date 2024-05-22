@@ -342,6 +342,17 @@ safe_concat() {
 	} | sed -e "/^\s*$/d"
 }
 
+IMAGE_EXTENSIONS=('jpg' 'jpeg' 'png' 'webp')
+
+find_no_images() {
+	local args=()
+	for ind in "${!IMAGE_EXTENSIONS[@]}"; do
+		args+=(-iname "*.${IMAGE_EXTENSIONS[ind]}")
+		((ind < ${#IMAGE_EXTENSIONS[@]} - 1)) && args+=(-o)
+	done
+	find . -type f \! \( "${args[@]}" \)
+}
+
 # "main"
 run_plaintext_playlist() {
 	# Validate Playlist based on given arguments
@@ -422,7 +433,7 @@ run_plaintext_playlist() {
 
 		MULTI_SELECT_FZF)
 			require fzf
-			songsToAdd="$(fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > ")" || abort "Error: You didn't provide any songs to add"
+			songsToAdd="$(find_no_images | fzf -m -i --prompt="Select songs to add. Hit 'Tab' to select multiple > ")" || abort "Error: You didn't provide any songs to add"
 			fixedFilenames="$(convert_to_playlist_filenames <<<"${songsToAdd}")"
 			echo -e "Adding the following to ${ActivePlaylist}:"
 			echo -e "${fixedFilenames}"
